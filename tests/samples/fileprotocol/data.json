@@ -1,0 +1,10 @@
+{
+    "html": [
+        { "html" : "<!DOCTYPE html><html class=\"\" style=\"width: 8.25in; height: 11.69in;\"><head><meta content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\"/><title></title><link rel=\"stylesheet\" href=\"file:///C:/foo.css\"><link rel=\"stylesheet\" href=\"file:///home/bar.css\"><style>body {background-image: url(\"file:///home/buz.css\");}</style><link rel=\"stylesheet\" href=\"https://bryntum.com/examples/build/grid.stockholm.css?455383\"></head><body></body></html>" }
+    ],
+    "orientation": "portrait",
+    "format": "A4",
+    "fileFormat": "pdf",
+    "fileName": "base_https",
+    "sendAsBinary": true
+}
