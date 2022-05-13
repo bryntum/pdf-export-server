@@ -9,6 +9,12 @@ const appConfig = require('../app.config.js').config;
 // if threshold is not enough, feel free to increase according to the compare output
 const FUZZ_THRESHOLD = os.platform() === 'win32' ? 1900 : 5280;
 
+let START_PORT = 8081;
+
+function getPort() {
+    return START_PORT++;
+}
+
 function ok(message) {
     console.log(`\u001b[32mOK\u001b[0m: ${message}`);
 }
@@ -43,43 +49,10 @@ function isWSL() {
     }
 }
 
-async function p_startServer({ protocol, port, workers, args = [] }) {
-    let server = spawn('node', [
-        path.join('src', 'server.js'),
-        `--${protocol}`,
-        port,
-        '--max-workers',
-        workers,
-        '--verbose',
-        isWSL() ? '--no-sandbox' : '',
-        ...args
-    ]);
-
-    await new Promise(resolve => {
-        server.stderr.pipe(process.stderr);
-
-        server.stdout.on('data', data => {
-            if (/started on/.test(data.toString())) {
-                resolve();
-            }
-        });
-    });
-
-    console.log('Export server started');
-
-    return server;
-}
-
-async function p_stopServer(server) {
-    // https://github.com/bryntum/bryntum-suite/wiki/Node-caveats#stopping-node-process-on-linux
-    // Sending SIGINT shuts down all processes correctly
-    server.kill('SIGINT');
-}
-
 appConfig.logger.level = 'verbose';
 
 async function startServer(config = {}) {
-    const { protocol, port, workers } = config;
+    const { protocol, port, workers = 1 } = config;
 
     const log = console.log;
 
@@ -215,6 +188,10 @@ function checkServerKey() {
     return fs.existsSync(path.join(__dirname, '..', 'cert', 'server.key'));
 }
 
+function getLoggerConfig(filename) {
+    return { file : { level : 'verbose', filename : `log/tests/${filename}.txt` } };
+}
+
 module.exports = {
     isWSL,
     startServer,
@@ -225,5 +202,7 @@ module.exports = {
     fail,
     status,
     is,
+    getPort,
+    getLoggerConfig,
     certExists : checkServerKey()
 };

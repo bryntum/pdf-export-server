@@ -1,14 +1,18 @@
 const { createLogger, format, transports } = require('winston');
 require('winston-daily-rotate-file');
 
+let loggers = {};
+
 let loggerInstance;
 
 module.exports = {
     getLogger(config = {}) {
         let result;
 
-        if (loggerInstance !== undefined) {
-            result = loggerInstance;
+        const hash = JSON.stringify(config);
+
+        if (hash in loggers) {
+            result = loggers[hash];
         }
         else {
             const { combine, timestamp, printf } = format;
@@ -22,11 +26,14 @@ module.exports = {
             if (config && config.rotate) {
                 transport = new transports.DailyRotateFile(config.rotate);
             }
+            if (config && config.file) {
+                transport = new transports.File(config.file);
+            }
             else {
                 transport = new transports.Console();
             }
 
-            result = loggerInstance = createLogger(Object.assign({
+            loggers[hash] = result = createLogger(Object.assign({
                 format: combine(
                     timestamp(),
                     myFormat
@@ -44,7 +51,7 @@ module.exports = {
             // Override the base console log with winston
             const clog = console.log;
             console.log = function(...args) {
-                loggerInstance.info(...args);
+                result.info(...args);
                 clog.apply(console, args);
             };
         }
