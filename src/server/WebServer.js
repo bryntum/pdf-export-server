@@ -1,7 +1,7 @@
 const express = require('express');
 const addRequestId = require('express-request-id')();
 const bodyParser = require('body-parser');
-const uuidv1 = require('uuid/v1');
+const nanoid = require('nanoid');
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
@@ -156,7 +156,7 @@ module.exports = class WebServer extends ExportServer {
     setFile(host, request, file) {
         const
             me      = this,
-            fileKey = uuidv1(),
+            fileKey = nanoid(),
             url     = host + fileKey;
 
         me.files[fileKey] = {
