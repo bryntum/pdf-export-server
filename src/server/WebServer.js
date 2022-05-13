@@ -131,6 +131,7 @@ module.exports = class WebServer extends ExportServer {
 
         if (options.http) {
             me.httpPort = options.http;
+            me.findNextHttpPort = options.findNextHttpPort;
             me.httpServer = me.createHttpServer();
             me.httpServer.timeout = options.timeout;
         }
@@ -181,11 +182,22 @@ module.exports = class WebServer extends ExportServer {
     //Start the server, listen on port
     startHttpServer() {
         if (this.httpServer) {
-            return new Promise(resolve => {
-                this.httpServer.listen(this.httpPort, () => {
+            return new Promise((resolve, reject) => {
+                this.httpServer.on('error', e => {
+                    if (e.code === 'EADDRINUSE' && this.findNextHttpPort) {
+                        this.httpServer.listen(++this.httpPort);
+                    }
+                    else {
+                        reject(e);
+                    }
+                });
+
+                this.httpServer.on('listening', () => {
                     console.log('Http server started on port ' + this.httpPort);
                     resolve();
                 });
+
+                this.httpServer.listen(this.httpPort);
             });
         }
     }

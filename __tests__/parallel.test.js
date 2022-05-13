@@ -1,6 +1,6 @@
 const fs = require('fs');
 const testData = require('./samples/parallel/data.json');
-const { getTmpFilePath, certExists, startServer, stopServer, getPort, getLoggerConfig } = require('../tests/utils.js');
+const { getTmpFilePath, certExists, startServer, stopServer, getLoggerConfig } = require('./utils.js');
 const { getFile } = require('./assertions.js');
 const requestPayload = require('./samples/parallel/parallel2.json');
 
@@ -20,7 +20,7 @@ describe('Should export over HTTP', () => {
         const
             host       = 'localhost',
             protocol   = 'http',
-            port       = getPort(),
+            port       = 8081,
             workers    = 4,
             fileFormat = 'pdf';
 
@@ -31,7 +31,7 @@ describe('Should export over HTTP', () => {
         const json = JSON.stringify(testData);
 
         for (let i = 0; i < 2; i++) {
-            promises.push(getFile(json, protocol, fileFormat, host, port));
+            promises.push(getFile(json, protocol, fileFormat, host, server.httpPort));
         }
 
         const exportedFiles = await Promise.all(promises);
@@ -67,7 +67,7 @@ describe('Parallel export requests received in very specific moments should work
     test('', async () => {
         const
             protocol = 'http',
-            port     = getPort(),
+            port     = 8081,
             workers  = 2;
 
         server = await startServer({ protocol, port, workers, logger : getLoggerConfig('parallel_2') });
@@ -97,12 +97,15 @@ describe('Parallel export requests received in very specific moments should work
         const promise1 = server.exportRequestHandler(requestPayload, 'request1');
 
         // Limit waiting time by 20 sec
-        const buffers = await Promise.race([
+        const promises = [
             Promise.all([promise1, promise2]),
             new Promise(resolve => setTimeout(() => {
                 resolve('timeout');
             }, 20000))
-        ]);
+        ];
+        const buffers = await Promise.race(promises);
+
+        await Promise.allSettled(promises);
 
         if (buffers === 'timeout') {
             fail('Request timeout');

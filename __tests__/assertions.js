@@ -4,7 +4,7 @@ const http = require('http');
 const https = require('https');
 const testDataPDF = require('./samples/smoke/base_https.pdf.json');
 const testDataPNG = require('./samples/smoke/base_https.png.json');
-const { getTmpFilePath, assertImage } = require('../tests/utils.js');
+const { getTmpFilePath, assertImage } = require('./utils.js');
 
 // https://github.com/request/request/issues/418#issuecomment-274105600
 // Allow self-signed certificates

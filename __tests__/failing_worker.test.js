@@ -1,5 +1,5 @@
 const testDataPDF = require('./samples/smoke/base_https.pdf.json');
-const { startServer, stopServer, getPort, getLoggerConfig } = require('../tests/utils.js');
+const { startServer, stopServer, getLoggerConfig } = require('./utils.js');
 const { getFile } = require('./assertions.js');
 
 // We export 100 pages, takes time
@@ -28,7 +28,7 @@ describe('Should export content with randomly failing workers', () => {
         const
             host     = 'localhost',
             protocol = 'http',
-            port     = getPort(),
+            port     = 8081,
             workers  = 4;
 
         server = await startServer({ protocol, port, workers, testing : true, logger : getLoggerConfig('failing_workers') });
@@ -37,7 +37,7 @@ describe('Should export content with randomly failing workers', () => {
             const promises = [];
 
             for (let i = 0; i < 5; i++) {
-                promises.push(assertExportedFile({ protocol, host, port }));
+                promises.push(assertExportedFile({ protocol, host, port: server.httpPort }));
             }
 
             await Promise.all(promises);
