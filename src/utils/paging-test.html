@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Paging test</title>
+    <style>
+        .page {
+            height: 11.7in;
+            width: 8.27in;
+            page-break-after: always;
+            display: flex;
+            flex-flow: column nowrap;
+        }
+        .row {
+            box-sizing: border-box;
+            border: 1px solid black;
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row" style="background-color: lightskyblue"></div>
+    </div>
+    <div class="page">
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row"></div>
+        <div class="row" style="background-color: aliceblue"></div>
+    </div>
+</body>
+</html>

@@ -15,7 +15,8 @@ module.exports = class Commands {
             ['',    'quick'                 , 'Provide to only wait for page load event'],
             ['',    'no-sandbox'            , 'Provide to pass no-sandbox argument to chromium'],
             ['',    'no-config'             , 'Provide to ignore app.config.js'],
-            ['',    'verbose'               , 'Alias for --level=verbose']
+            ['',    'verbose'               , 'Alias for --level=verbose'],
+            ['',    'help'                  , 'Show help message']
         ]);
 
         this.getopt.setHelp(

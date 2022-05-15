@@ -53,7 +53,11 @@ if (config['disable-web-security']) {
 config.chromiumArgs = chromiumArgs;
 config.chromiumExecutablePath = chromiumExecutablePath;
 
-if (config.http || config.https) {
+if (config.help) {
+    commands.showHelp();
+    process.exit();
+}
+else if (config.http || config.https) {
     const webServer = new WebServer(config);
 
     webServer.start();

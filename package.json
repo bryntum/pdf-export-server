@@ -1,5 +1,5 @@
 {
-  "name": "@bryntum/export-server",
+  "name": "@bryntum/pdf-export-server",
   "description": "Standalone export server",
   "version": "0.0.1",
   "scripts": {
