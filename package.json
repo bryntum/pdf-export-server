@@ -1,9 +1,31 @@
 {
   "name": "@bryntum/pdf-export-server",
-  "description": "Standalone export server",
   "version": "0.0.1",
+  "description": "Standalone PDF export server",
+  "keywords": ["bryntum", "pdf", "png", "export"],
+  "homepage": "https://github.com/bryntum/pdf-export-server",
+  "bugs": {
+    "url": "https://github.com/bryntum/pdf-export-server/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Bryntum",
+    "url": "https://bryntum.com",
+    "email": "info@bryntum.com"
+  },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "measure": "node ./src/utils/measure-export-time.js"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github:bryntum/pdf-export-server"
+  },
+  "bin": {
+    "pdf-export-server": "./bin/pdf-export-server"
   },
   "dependencies": {
     "body-parser": "~1.18.3",

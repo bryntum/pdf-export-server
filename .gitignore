@@ -6,8 +6,9 @@ log
 log/
 tmp
 tmp/
-bin
-bin/
+bin/linux
+bin/windows
+bin/mac
 node_modules/
 !log/config.json
 !.gitkeep

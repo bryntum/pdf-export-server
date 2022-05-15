@@ -26,7 +26,7 @@ module.exports = {
             if (config && config.rotate) {
                 transport = new transports.DailyRotateFile(config.rotate);
             }
-            if (config && config.file) {
+            else if (config && config.file) {
                 transport = new transports.File(config.file);
             }
             else {
