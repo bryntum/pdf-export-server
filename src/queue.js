@@ -605,7 +605,7 @@ class Worker extends Loggable {
         }
 
         await page.setContent(html, { waitUntil : me.waitUntil });
-        await page.emulateMedia('print');
+        await page.emulateMediaType('print');
         return page.pdf(config);
     }
 
@@ -676,7 +676,7 @@ class Worker extends Loggable {
         me.verbose(`Taking screenshot of size ${viewportConfig.width}x${viewportConfig.height}`);
 
         await page.setViewport(viewportConfig);
-        await page.emulateMedia('print');
+        await page.emulateMediaType('print');
         return page.screenshot(config);
     }
 }

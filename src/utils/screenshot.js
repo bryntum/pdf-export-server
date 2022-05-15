@@ -5,6 +5,7 @@
  * Reported here: https://github.com/puppeteer/puppeteer/issues/5341
  */
 const puppeteer = require('puppeteer');
+const fs = require('fs');
 
 class Server {
     async setup() {
@@ -31,7 +32,7 @@ class Server {
                 width : 10000,
                 height : 50000
             });
-            await page.emulateMedia('print');
+            await page.emulateMediaType('print');
 
             await page.screenshot({
                 deviceScaleFactor : 4

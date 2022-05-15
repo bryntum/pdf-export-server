@@ -33,7 +33,7 @@ class Server {
 
             await page.setContent(me.content, { waitUntil : 'networkidle0' });
 
-            await page.emulateMedia('print');
+            await page.emulateMediaType('print');
 
             await page.pdf({
                 path: 'paging-test-2.pdf',
