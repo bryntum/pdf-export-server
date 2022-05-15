@@ -5,8 +5,16 @@ name: Node.js CI
 
 on:
   push:
+    paths:
+      - 'src/**'
+      - '__tests__/**'
+      - 'package.json'
     branches: [ main ]
   pull_request:
+    paths:
+      - 'src/**'
+      - '__tests__/**'
+      - 'package.json'
     branches: [ main ]
 
 jobs:
