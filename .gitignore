@@ -7,7 +7,7 @@ log/
 tmp
 tmp/
 bin/linux
-bin/windows
+bin/win
 bin/mac
 node_modules/
 !log/config.json

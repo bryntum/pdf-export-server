@@ -13,19 +13,16 @@
     "url": "https://bryntum.com",
     "email": "info@bryntum.com"
   },
-  "scripts": {
-    "test": "jest",
-    "measure": "node ./src/utils/measure-export-time.js"
-  },
-  "engines": {
-    "node": ">=14"
+  "bin": {
+    "pdf-export-server": "./bin/pdf-export-server"
   },
   "repository": {
     "type": "git",
     "url": "github:bryntum/pdf-export-server"
   },
-  "bin": {
-    "pdf-export-server": "./bin/pdf-export-server"
+  "scripts": {
+    "test": "jest",
+    "measure": "node ./src/utils/measure-export-time.js"
   },
   "dependencies": {
     "body-parser": "~1.18.3",
@@ -56,6 +53,9 @@
     "winston": "~3.2.1",
     "winston-daily-rotate-file": "~4.4.1",
     "ws": "~5.2.0"
+  },
+  "engines": {
+    "node": ">=14"
   },
   "jest": {
     "testMatch": [
