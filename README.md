@@ -12,7 +12,7 @@ the HTML fragments, call the service and serve the binary.
 
 | pdf-export-server | ExtScheduler/ExtGantt | Bryntum Grid/Scheduler/Gantt |
 |---|---|---|
-| 0.0.1 | * | * |
+| 1.0.0 | * | * |
 
 ## Usage
 
