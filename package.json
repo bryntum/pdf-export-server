@@ -1,8 +1,14 @@
 {
   "name": "@bryntum/pdf-export-server",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Standalone PDF export server",
-  "keywords": ["bryntum", "pdf", "png", "export"],
+  "keywords": [
+    "bryntum",
+    "pdf",
+    "png",
+    "export",
+    "server"
+  ],
   "homepage": "https://github.com/bryntum/pdf-export-server",
   "bugs": {
     "url": "https://github.com/bryntum/pdf-export-server/issues"
@@ -21,6 +27,7 @@
     "url": "github:bryntum/pdf-export-server"
   },
   "scripts": {
+    "start": "node ./src/server.js",
     "test": "jest",
     "measure": "node ./src/utils/measure-export-time.js"
   },
