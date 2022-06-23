@@ -23,4 +23,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: bryntum/pdf-export-server:${{ github.event.release.tagName }}
+          tags: bryntum/pdf-export-server:${{ github.event.release.tag_name }}
