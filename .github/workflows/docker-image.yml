@@ -1,9 +1,9 @@
 name: Build Docker Image
 
 on:
-  push:
-    branches:
-      - 'main'
+  release:
+    types:
+      - published
 
 jobs:
   docker:
@@ -23,4 +23,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: bryntum/pdf-export-server:latest
+          tags: bryntum/pdf-export-server:${{ github.event.release.tagName }}
