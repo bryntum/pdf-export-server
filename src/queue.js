@@ -1,6 +1,7 @@
 const { EventEmitter } = require('events');
 const puppeteer = require('puppeteer');
 const generate = require('nanoid/generate');
+const { RequestCancelError } = require('./exception.js');
 
 const
     alphabet         = '0123456789abcdefghijklmnopqrstuvwxyz',
@@ -308,7 +309,7 @@ class Queue extends Loggable {
                     me.jobs.splice(startIndex, count);
                 }
 
-                reject(new Error(`Request ${requestId} is cancelled by the client`));
+                reject(new RequestCancelError(`Request ${requestId} is cancelled by the client`));
             }
 
             me.on('job', onJob);
@@ -441,6 +442,11 @@ class Queue extends Loggable {
             // First take the worker
             // this will await for first available worker
             const worker = await me.getWorker();
+
+            if (!me.jobs.length) {
+                me.next();
+                return;
+            }
 
             --me._awaitingActions;
 

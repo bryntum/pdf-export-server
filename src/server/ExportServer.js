@@ -97,7 +97,7 @@ module.exports = class ExportServer {
      *
      * @param requestData
      * @param requestId UUID of the request
-     * @param request request instance
+     * @param [request] request instance
      * @returns {Promise<Buffer>}
      */
     async exportRequestHandler(requestData, requestId, request) {
@@ -127,7 +127,7 @@ module.exports = class ExportServer {
                 config.landscape = landscape;
             }
 
-            request.on('close', () => this.taskQueue.dequeue(requestId));
+            request?.on('close', () => this.taskQueue.dequeue(requestId));
 
             const files = await this.taskQueue.queue({ requestId, items : html.map(i => i.html), config });
 
