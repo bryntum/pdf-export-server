@@ -95,13 +95,14 @@ module.exports = class ExportServer {
      *  - range: like 'complete'
      *  - orientation : landscape | portrait
      *
-     * @param request
+     * @param requestData
      * @param requestId UUID of the request
+     * @param request request instance
      * @returns {Promise<Buffer>}
      */
-    async exportRequestHandler(request, requestId) {
+    async exportRequestHandler(requestData, requestId, request) {
         const
-            { html, orientation, format, fileFormat, clientURL } = request,
+            { html, orientation, format, fileFormat, clientURL } = requestData,
             landscape                                            = orientation === 'landscape';
 
         if (!html) {
@@ -125,6 +126,8 @@ module.exports = class ExportServer {
                 config.format = format;
                 config.landscape = landscape;
             }
+
+            request.on('close', () => this.taskQueue.dequeue(requestId));
 
             const files = await this.taskQueue.queue({ requestId, items : html.map(i => i.html), config });
 

@@ -268,29 +268,52 @@ class Queue extends Loggable {
 
             me.info(`Added ${items.length} to the queue, current length is ${me.jobs.length}`);
 
-            const onJobFailed = (id) => {
-                if (id === requestId) {
-                    me.removeListener('job', onJob);
+            function detachListeners() {
+                me.removeListener('job', onJob);
+                me.removeListener('jobfailed', onJobFailed);
+            }
 
-                    me.removeListener('jobfailed', onJobFailed);
+            function onJobFailed(id) {
+                if (id === requestId) {
+                    detachListeners();
 
                     reject(new Error('Failed to export task'));
                 }
-            };
+            }
 
-            const onJob = (id, result) => {
+            function onJob(id, result) {
                 if (id === requestId) {
-                    me.removeListener('job', onJob);
-
-                    me.removeListener('jobfailed', onJobFailed);
+                    detachListeners();
 
                     resolve(result);
                 }
-            };
+            }
+
+            function onJobCancel() {
+                detachListeners();
+
+                let startIndex, count = 0;
+
+                me.jobs.forEach((job, index) => {
+                    if (job.requestId === requestId) {
+                        if (startIndex == null) {
+                            startIndex = index;
+                        }
+
+                        count++;
+                    }
+                });
+
+                if (startIndex != null) {
+                    me.jobs.splice(startIndex, count);
+                }
+
+                reject('cancel');
+            }
 
             me.on('job', onJob);
-
             me.on('jobfailed', onJobFailed);
+            me.on('jobcancel', onJobCancel);
 
             // If queue is running now and there is no awaiting action that will continue the queue,
             // call next() immediately to start job
@@ -302,6 +325,10 @@ class Queue extends Loggable {
                 me.start();
             }
         });
+    }
+
+    dequeue(requestId) {
+        this.emit('jobcancel', requestId);
     }
 
     start() {

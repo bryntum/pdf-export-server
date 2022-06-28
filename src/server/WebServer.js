@@ -93,7 +93,7 @@ module.exports = class WebServer extends ExportServer {
                 me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
 
                 //Pass the request to the processFn
-                me.exportRequestHandler(request, req.id).then(file => {
+                me.exportRequestHandler(request, req.id, req).then(file => {
                     me.logger.log('info', `POST request ${req.id} succeeded`);
 
                     //On binary the buffer is directly sent to the client, else store file locally in memory for 10 seconds
