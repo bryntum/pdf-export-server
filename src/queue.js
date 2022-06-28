@@ -308,7 +308,7 @@ class Queue extends Loggable {
                     me.jobs.splice(startIndex, count);
                 }
 
-                reject('cancel');
+                reject(new Error(`Request ${requestId} is cancelled by the client`));
             }
 
             me.on('job', onJob);
