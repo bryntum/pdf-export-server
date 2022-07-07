@@ -293,21 +293,7 @@ class Queue extends Loggable {
             function onJobCancel() {
                 detachListeners();
 
-                let startIndex, count = 0;
-
-                me.jobs.forEach((job, index) => {
-                    if (job.requestId === requestId) {
-                        if (startIndex == null) {
-                            startIndex = index;
-                        }
-
-                        count++;
-                    }
-                });
-
-                if (startIndex != null) {
-                    me.jobs.splice(startIndex, count);
-                }
+                delete me._results[requestId];
 
                 reject(new RequestCancelError(`Request ${requestId} is cancelled by the client`));
             }
@@ -379,17 +365,20 @@ class Queue extends Loggable {
                 .then(data => {
                     const results = me._results[job.requestId];
 
-                    results.set(job.index, data);
+                    // Result may have been removed for the cancelled job
+                    if (results) {
+                        results.set(job.index, data);
 
-                    // Last job has finished, return result
-                    if (results.size === job.length) {
-                        delete me._results[job.requestId];
+                        // Last job has finished, return result
+                        if (results.size === job.length) {
+                            delete me._results[job.requestId];
 
-                        me.verbose(`All jobs finished for request ${job.requestId}`);
+                            me.verbose(`All jobs finished for request ${job.requestId}`);
 
-                        const result = orderMapValuesByKey(results);
+                            const result = orderMapValuesByKey(results);
 
-                        me.emit('job', job.requestId, result);
+                            me.emit('job', job.requestId, result);
+                        }
                     }
                 })
                 .catch(e => {
@@ -442,11 +431,6 @@ class Queue extends Loggable {
             // First take the worker
             // this will await for first available worker
             const worker = await me.getWorker();
-
-            if (!me.jobs.length) {
-                me.next();
-                return;
-            }
 
             --me._awaitingActions;
 
