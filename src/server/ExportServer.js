@@ -127,9 +127,17 @@ module.exports = class ExportServer {
                 config.landscape = landscape;
             }
 
-            request?.on('close', () => this.taskQueue.dequeue(requestId));
+            const me = this;
+
+            const onClose = () => {
+                console.log(request.id, requestId);
+                me.taskQueue.dequeue(requestId)
+            }
+            request?.on('close', onClose);
 
             const files = await this.taskQueue.queue({ requestId, items : html.map(i => i.html), config });
+
+            request?.off('close', onClose);
 
             //All buffers are stored in the files object, we need to concatenate them
             if (files.length) {

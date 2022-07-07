@@ -31,7 +31,7 @@ describe('Should export over HTTP', () => {
         const json = JSON.stringify(testData);
 
         for (let i = 0; i < 2; i++) {
-            promises.push(getFile(json, protocol, fileFormat, host, server.httpPort));
+            promises.push(getFile(json, protocol, fileFormat, host, server.httpPort, 60000 * 2));
         }
 
         const exportedFiles = await Promise.all(promises);

@@ -36,6 +36,9 @@ async function getFile(json, protocol, fileFormat, host, port, timeout) {
                 else if (/application\/json/.test(response.headers['content-type'])) {
                     reject(new Error(result.toString()));
                 }
+                else {
+                    reject('Request ended unexpectedly');
+                }
             });
         });
 
