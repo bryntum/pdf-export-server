@@ -36,7 +36,7 @@ class Server {
             // console.timeEnd('setContent');
 
             console.time('Pdf');
-            await page.emulateMedia('print');
+            await page.emulateMediaType('print');
             const buffer = await page.pdf();
             console.timeEnd('Pdf');
 

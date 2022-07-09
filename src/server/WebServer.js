@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const serveStatic = require('serve-static');
 const ExportServer = require('./ExportServer.js');
+const { RequestCancelError } = require('../exception.js');
 
 module.exports = class WebServer extends ExportServer {
     constructor(config) {
@@ -93,7 +94,7 @@ module.exports = class WebServer extends ExportServer {
                 me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
 
                 //Pass the request to the processFn
-                me.exportRequestHandler(request, req.id).then(file => {
+                me.exportRequestHandler(request, req.id, req).then(file => {
                     me.logger.log('info', `POST request ${req.id} succeeded`);
 
                     //On binary the buffer is directly sent to the client, else store file locally in memory for 10 seconds
@@ -109,16 +110,22 @@ module.exports = class WebServer extends ExportServer {
                         });
                     }
                 }).catch(e => {
-                    // Shorthand call doesn't work here for some reason
-                    me.logger.log('warn', `POST request ${req.id} failed`);
-                    me.logger.log('warn', e.stack);
+                    if (e instanceof RequestCancelError) {
+                        // Shorthand call doesn't work here for some reason
+                        me.logger.log('verbose', `POST request ${req.id} cancelled`);
+                    }
+                    else {
+                        // Shorthand call doesn't work here for some reason
+                        me.logger.log('warn', `POST request ${req.id} failed`);
+                        me.logger.log('warn', e.stack);
 
-                    //Make up min 500 or 200?
-                    res.status(request.sendAsBinary ? 500 : 200).jsonp({
-                        success : false,
-                        msg     : e.message,
-                        stack   : e.stack
-                    });
+                        //Make up min 500 or 200?
+                        res.status(request.sendAsBinary ? 500 : 200).jsonp({
+                            success : false,
+                            msg     : e.message,
+                            stack   : e.stack
+                        });
+                    }
                 });
             });
         }

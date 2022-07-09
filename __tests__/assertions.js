@@ -36,6 +36,9 @@ async function getFile(json, protocol, fileFormat, host, port, timeout) {
                 else if (/application\/json/.test(response.headers['content-type'])) {
                     reject(new Error(result.toString()));
                 }
+                else {
+                    reject('Request ended unexpectedly');
+                }
             });
         });
 
@@ -66,8 +69,6 @@ async function assertExportedFile({ protocol, host, port, fileFormat }) {
         const gotSize = Math.abs(baseSize -  exportedFile.length);
         const expectedSize = baseSize * 0.05;
 
-        expect(gotSize).toBeLessThanOrEqual(expectedSize);
-
         if (gotSize > expectedSize) {
             const tmpFilePath = getTmpFilePath(fileFormat);
 
@@ -75,6 +76,8 @@ async function assertExportedFile({ protocol, host, port, fileFormat }) {
 
             fail(`${fileFormat} length differs very much from expected.\nCheck exported file here: ${tmpFilePath}`);
         }
+
+        expect(gotSize).toBeLessThanOrEqual(expectedSize);
     }
 
     return result;

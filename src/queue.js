@@ -1,6 +1,7 @@
 const { EventEmitter } = require('events');
 const puppeteer = require('puppeteer');
 const generate = require('nanoid/generate');
+const { RequestCancelError } = require('./exception.js');
 
 const
     alphabet         = '0123456789abcdefghijklmnopqrstuvwxyz',
@@ -268,29 +269,39 @@ class Queue extends Loggable {
 
             me.info(`Added ${items.length} to the queue, current length is ${me.jobs.length}`);
 
-            const onJobFailed = (id) => {
-                if (id === requestId) {
-                    me.removeListener('job', onJob);
+            function detachListeners() {
+                me.removeListener('job', onJob);
+                me.removeListener('jobfailed', onJobFailed);
+                me.removeListener('jobcancel', onJobCancel);
+            }
 
-                    me.removeListener('jobfailed', onJobFailed);
+            function onJobFailed(id) {
+                if (id === requestId) {
+                    detachListeners();
 
                     reject(new Error('Failed to export task'));
                 }
-            };
+            }
 
-            const onJob = (id, result) => {
+            function onJob(id, result) {
                 if (id === requestId) {
-                    me.removeListener('job', onJob);
-
-                    me.removeListener('jobfailed', onJobFailed);
+                    detachListeners();
 
                     resolve(result);
                 }
-            };
+            }
+
+            function onJobCancel() {
+                detachListeners();
+
+                delete me._results[requestId];
+
+                reject(new RequestCancelError(`Request ${requestId} is cancelled by the client`));
+            }
 
             me.on('job', onJob);
-
             me.on('jobfailed', onJobFailed);
+            me.on('jobcancel', onJobCancel);
 
             // If queue is running now and there is no awaiting action that will continue the queue,
             // call next() immediately to start job
@@ -302,6 +313,10 @@ class Queue extends Loggable {
                 me.start();
             }
         });
+    }
+
+    dequeue(requestId) {
+        this.emit('jobcancel', requestId);
     }
 
     start() {
@@ -351,17 +366,20 @@ class Queue extends Loggable {
                 .then(data => {
                     const results = me._results[job.requestId];
 
-                    results.set(job.index, data);
+                    // Result may have been removed for the cancelled job
+                    if (results) {
+                        results.set(job.index, data);
 
-                    // Last job has finished, return result
-                    if (results.size === job.length) {
-                        delete me._results[job.requestId];
+                        // Last job has finished, return result
+                        if (results.size === job.length) {
+                            delete me._results[job.requestId];
 
-                        me.verbose(`All jobs finished for request ${job.requestId}`);
+                            me.verbose(`All jobs finished for request ${job.requestId}`);
 
-                        const result = orderMapValuesByKey(results);
+                            const result = orderMapValuesByKey(results);
 
-                        me.emit('job', job.requestId, result);
+                            me.emit('job', job.requestId, result);
+                        }
                     }
                 })
                 .catch(e => {
@@ -605,7 +623,7 @@ class Worker extends Loggable {
         }
 
         await page.setContent(html, { waitUntil : me.waitUntil });
-        await page.emulateMedia('print');
+        await page.emulateMediaType('print');
         return page.pdf(config);
     }
 
@@ -676,7 +694,7 @@ class Worker extends Loggable {
         me.verbose(`Taking screenshot of size ${viewportConfig.width}x${viewportConfig.height}`);
 
         await page.setViewport(viewportConfig);
-        await page.emulateMedia('print');
+        await page.emulateMediaType('print');
         return page.screenshot(config);
     }
 }

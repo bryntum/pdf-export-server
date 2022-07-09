@@ -14,6 +14,7 @@ module.exports = class Commands {
             ['',    'timeout=TIMEOUT'       , 'Request timeout time in seconds'],
             ['',    'quick'                 , 'Provide to only wait for page load event'],
             ['',    'no-sandbox'            , 'Provide to pass no-sandbox argument to chromium'],
+            ['',    'disable-web-security'  , 'Provide to pass disable-web-security argument to chromium'],
             ['',    'no-config'             , 'Provide to ignore app.config.js'],
             ['',    'verbose'               , 'Alias for --level=verbose'],
             ['',    'help'                  , 'Show help message']
