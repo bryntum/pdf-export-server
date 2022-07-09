@@ -129,10 +129,8 @@ module.exports = class ExportServer {
 
             const me = this;
 
-            const onClose = () => {
-                console.log(request.id, requestId);
-                me.taskQueue.dequeue(requestId)
-            }
+            const onClose = () => me.taskQueue.dequeue(requestId);
+
             request?.on('close', onClose);
 
             const files = await this.taskQueue.queue({ requestId, items : html.map(i => i.html), config });
