@@ -10,6 +10,5 @@ bin/linux
 bin/win
 bin/mac
 node_modules/
-package-lock.json
 !log/config.json
 !.gitkeep
