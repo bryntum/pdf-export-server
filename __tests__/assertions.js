@@ -69,8 +69,6 @@ async function assertExportedFile({ protocol, host, port, fileFormat }) {
         const gotSize = Math.abs(baseSize -  exportedFile.length);
         const expectedSize = baseSize * 0.05;
 
-        expect(gotSize).toBeLessThanOrEqual(expectedSize);
-
         if (gotSize > expectedSize) {
             const tmpFilePath = getTmpFilePath(fileFormat);
 
@@ -78,6 +76,8 @@ async function assertExportedFile({ protocol, host, port, fileFormat }) {
 
             fail(`${fileFormat} length differs very much from expected.\nCheck exported file here: ${tmpFilePath}`);
         }
+
+        expect(gotSize).toBeLessThanOrEqual(expectedSize);
     }
 
     return result;
