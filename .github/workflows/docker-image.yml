@@ -12,6 +12,7 @@ jobs:
       -
         name: Set up labels
         id: meta
+        uses: docker/metadata-action@v4
         with:
           tags: |
             bryntum/pdf-export-server:${{ github.event.release.tag_name }}
