@@ -37,17 +37,17 @@ describe('Should export over HTTP', () => {
         const exportedFiles = await Promise.all(promises);
 
         exportedFiles.forEach(file => {
-            // Not clear how to compare visual result of pdf, yet
-            // So this is more of a sanity test, checking if returned pdf has size greater that .5MB
-            expect(file.length).toBeGreaterThan(500000);
-
-            if (file.length < 500000) {
+            if (file.length < 100000) {
                 const tmpFilePath = getTmpFilePath(fileFormat);
 
                 fs.writeFileSync(tmpFilePath, file);
 
                 fail(`${fileFormat} length is incorrect!\nSee exported file here: ${tmpFilePath}`);
             }
+
+            // Not clear how to compare visual result of pdf, yet
+            // So this is more of a sanity test, checking if returned pdf has size greater that .100KB
+            expect(file.length).toBeGreaterThan(100000);
         });
     });
 });
