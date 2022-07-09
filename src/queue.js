@@ -272,6 +272,7 @@ class Queue extends Loggable {
             function detachListeners() {
                 me.removeListener('job', onJob);
                 me.removeListener('jobfailed', onJobFailed);
+                me.removeListener('jobcancel', onJobCancel);
             }
 
             function onJobFailed(id) {
