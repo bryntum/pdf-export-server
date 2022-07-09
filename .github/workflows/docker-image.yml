@@ -10,6 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
+        name: Set up labels
+        id: meta
+        with:
+          tags: |
+            bryntum/pdf-export-server:${{ github.event.release.tag_name }}
+            bryntum/pdf-export-server:latest
+      -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
@@ -23,4 +30,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: bryntum/pdf-export-server:${{ github.event.release.tag_name }}
+          tags: ${{ steps.meta.output.tags }}
