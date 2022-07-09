@@ -52,7 +52,7 @@
     "path": "~0.12.7",
     "pkg": "~5.5.1",
     "proxy-from-env": "~1.0.0",
-    "puppeteer": "14.1.0",
+    "puppeteer": "15.3.2",
     "recursive-copy": "~2.0.9",
     "rimraf": "~2.6.2",
     "serve-static": "~1.13.2",
