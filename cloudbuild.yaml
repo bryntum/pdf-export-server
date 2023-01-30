@@ -1,0 +1,31 @@
+substitutions:
+  _SERVICE_NAME: <service-name>
+  _DEPLOY_REGION: <region>
+
+steps:
+  # Build the container image
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: bash
+    args: ["./scripts/build.sh", "$PROJECT_ID", "$_SERVICE_NAME", "$COMMIT_SHA"]
+    env:
+      - "DOCKER_BUILDKIT=1"
+
+  # Deploy container image to Cloud Run
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: bash
+    args:
+      [
+        "./scripts/deploy.sh",
+        "$PROJECT_ID",
+        "$_SERVICE_NAME",
+        "$COMMIT_SHA",
+        "$_DEPLOY_REGION",
+      ]
+
+images:
+  - "gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA"
+
+tags:
+  - "cloud-run"
+  - "deploy"
+  - "$_SERVICE_NAME"
