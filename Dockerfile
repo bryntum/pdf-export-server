@@ -50,6 +50,6 @@ RUN npm i
 
 EXPOSE 8080 8081
 
-ENTRYPOINT [ "node", "./src/server.js", "-H", "8081" ]
+ENTRYPOINT [ "node", "./src/server.js", "-H", "8081", '--quick' ]
 
 CMD ["bash"]
