@@ -12,7 +12,7 @@ const config = {
     "maximum"       : null,
 
     // Path to static resources to be served. See readme.md for details
-    "resources"     : null,
+    "resources"     : "./src/resources",
 
     // True to pass `--no-sandbox` flag to the chromium
     "no-sandbox"    : true,
@@ -21,7 +21,7 @@ const config = {
     "max-workers"   : 5,
 
     // Log level. Possible values: error, warn, info, verbose
-    "level"         : "info",
+    "level"         : "verbose",
 
     // Pass true to wait for page load only (fonts may be missing). Reduces page loading time by at least .5s
     "quick"          : false,
