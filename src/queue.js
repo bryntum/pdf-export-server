@@ -605,6 +605,7 @@ class Worker extends Loggable {
             left   : 1,
             right  : 1
         };
+        config.timeout = 0;
 
         // NOTE: NOT SUPPORTED IN WSL
         if (config.clientURL) {
