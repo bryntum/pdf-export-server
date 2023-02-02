@@ -1,2 +1,3 @@
---memory: 4Gi
+--memory: 8Gi
 --max-instances: 4
+--cpu: 	4
