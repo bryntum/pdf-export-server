@@ -1,2 +1,2 @@
---memory: 2Gi
+--memory: 5Gi
 --max-instances: 4
