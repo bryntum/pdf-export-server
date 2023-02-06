@@ -173,7 +173,7 @@ module.exports = class WebServer extends ExportServer {
             buffer     : file
         };
 
-        //You got ten seconds to fetch the file
+        //You got 60 seconds to fetch the file
         setTimeout(() => {
             delete me.files[fileKey];
         }, 60000);
