@@ -34,8 +34,8 @@ module.exports = class WebServer extends ExportServer {
         }, options);
 
         app.use(addRequestId);
-        app.use(bodyParser.json({ limit : options.maximum || '50mb' }));
-        app.use(bodyParser.urlencoded({ extended : false, limit : options.maximum || '50mb' }));
+        app.use(bodyParser.json({ limit : options.maximum || '5000mb' }));
+        app.use(bodyParser.urlencoded({ extended : false, limit : options.maximum || '5000mb' }));
 
         //Set CORS
         if (options.cors !== 'false') {
