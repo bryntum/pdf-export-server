@@ -10,6 +10,27 @@ const serveStatic = require('serve-static');
 const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
 
+function doRequest(url) {
+    return new Promise((resolve, reject) => {
+        const req = https.get(url, (res) => {
+            let responseBody = '';
+
+            res.on('data', (chunk) => {
+                responseBody += chunk;
+            });
+
+            res.on('end', () => {
+                resolve(JSON.parse(responseBody));
+            });
+        });
+
+        req.on('error', (err) => {
+            reject(err);
+        });
+    });
+}
+
+  
 module.exports = class WebServer extends ExportServer {
     constructor(config) {
         super(config);
@@ -82,8 +103,13 @@ module.exports = class WebServer extends ExportServer {
 
         //Catch the posted request.
         if (!options.dedicated) {
-            app.post('/', (req, res) => {
-                const request = req.body;
+            app.post('/', async (req, res) => {
+                let request = req.body;
+
+                if(request.signedUrl){
+                    const bodyAsFile = await doRequest(request.signedUrl)
+                    request = bodyAsFile
+                }
 
                 //Accepts encoded and parsed html fragments. If still encoded, then parse
                 if (typeof request.html === 'string') {
