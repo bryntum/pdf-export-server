@@ -107,8 +107,8 @@ module.exports = class WebServer extends ExportServer {
                 let request = req.body;
 
                 if(request.signedUrl){
-                    const bodyAsFile = await doRequest(request.signedUrl)
-                    request = bodyAsFile
+                    const bodyAsFile = await doRequest(request.signedUrl);
+                    request = bodyAsFile;
                 }
 
                 //Accepts encoded and parsed html fragments. If still encoded, then parse
@@ -199,10 +199,9 @@ module.exports = class WebServer extends ExportServer {
             buffer     : file
         };
 
-        //You got 60 seconds to fetch the file
         setTimeout(() => {
             delete me.files[fileKey];
-        }, 60000);
+        }, 5 * 60 * 1000); // 5 minutes to fetch the file
 
         return url;
     }
