@@ -188,8 +188,10 @@ module.exports = class WebServer extends ExportServer {
      * @returns {*}
      */
     async setFile(bucketName, request, fileBuffer) {
-      const date =  new Date().toLocaleString()
-      const fileName = `${request.fileName} ${date}`.replace(/[^\w\s]/gi, '').replace(/\s/g, '_')
+      const date =  new Date().toLocaleString().replace(/[\/:]/g, '-')
+      const fileName = `${request.fileName} ${date}`
+        .replace(/[\/\\:*?"<>|]/g, '')
+        .replace(/\s+/g, '_')
 
       const bucket = new Storage().bucket(bucketName);
       const file = new File(bucket, `${fileName}.${request.fileFormat}`);
