@@ -132,7 +132,7 @@ module.exports = class WebServer extends ExportServer {
                         res.status(200).send(file);
                     }
                     else {
-                        const fileUrl = await me.setFile(bucket, `${request.fileName}.${request.fileFormat}`, file)
+                        const fileUrl = await me.setFile(bucket, request, file)
                         res.status(200).jsonp({
                             success : true,
                             url     : fileUrl
@@ -187,13 +187,19 @@ module.exports = class WebServer extends ExportServer {
      * @param fileBuffer The file buffer pdf/png
      * @returns {*}
      */
-    async setFile(bucketName, fileName, fileBuffer) {
+    async setFile(bucketName, request, fileBuffer) {
+      const date =  new Date().toLocaleString()      
+      const fileName = `${request.fileName} ${date}.${request.fileFormat}`
+
       const bucket = new Storage().bucket(bucketName);
       const file = new File(bucket, fileName);
 
       await file.save(fileBuffer);
-      const [url] = await file.getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 /* 1h */ });
-			console.log(url);
+      const [url] = await file.getSignedUrl({
+        action: 'read',
+        responseDisposition: 'attachment',
+        expires: Date.now() + 60 * 60 * 1000 /* 1h */
+      });
 
       return url;
     }
