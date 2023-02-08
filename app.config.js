@@ -1,6 +1,6 @@
 const config = {
     // HTTP server port
-    "http"          : null,
+    "http"          : 8080,
 
     // HTTPS server port
     "https"         : null,
