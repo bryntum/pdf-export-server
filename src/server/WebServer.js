@@ -9,6 +9,7 @@ const path = require('path');
 const serveStatic = require('serve-static');
 const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
+const { Storage, File } = require('@google-cloud/storage');
 
 function doRequest(url) {
     return new Promise((resolve, reject) => {
@@ -105,6 +106,7 @@ module.exports = class WebServer extends ExportServer {
         //Catch the posted request.
         if (!options.dedicated) {
             app.post('/', async (req, res) => {
+                const bucket = req.body.bucket;
                 let request = req.body;
 
                 if(request.signedUrl){
@@ -133,7 +135,7 @@ module.exports = class WebServer extends ExportServer {
                         //Send the url for the cached file, will is cached for 10 seconds
                         res.status(200).jsonp({
                             success : true,
-                            url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, file)
+                            url     : me.setFile(bucket, file)
                         });
                     }
                 }).catch(e => {
@@ -182,29 +184,18 @@ module.exports = class WebServer extends ExportServer {
     /**
      * Stores a file stream temporarily to be fetched on guid
      *
-     * @param host This host to fetch from
-     * @param request Passed initial request
-     * @param file The file buffer pdf/png
+     * @param fileBuffer The file buffer pdf/png
      * @returns {*}
      */
-    setFile(host, request, file) {
-        const
-            me      = this,
-            fileKey = nanoid(),
-            url     = host + fileKey;
+    async setFile(bucketName, fileBuffer) {
+      const fileName = nanoid();
 
-        me.files[fileKey] = {
-            date       : new Date(),
-            fileFormat : request.fileFormat,
-            fileName   : `${request.fileName || `export-${request.range}`}.${request.fileFormat}`,
-            buffer     : file
-        };
+      const bucket = new Storage().bucket(bucketName);
+      const file = new File(bucket, fileName);
+      await file.save(fileBuffer);
+      const [url] = await file.getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 /* 1h */ });
 
-        setTimeout(() => {
-            delete me.files[fileKey];
-        }, 5 * 60 * 1000); // 5 minutes to fetch the file
-
-        return url;
+      return url;
     }
 
     //Create http server instance
