@@ -123,7 +123,7 @@ module.exports = class WebServer extends ExportServer {
                 me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
 
                 //Pass the request to the processFn
-                me.exportRequestHandler(request, req.id, req).then(file => {
+                me.exportRequestHandler(request, req.id, req).then(async file => {
                     me.logger.log('info', `POST request ${req.id} succeeded`);
 
                     //On binary the buffer is directly sent to the client, else store file locally in memory for 10 seconds
@@ -132,10 +132,10 @@ module.exports = class WebServer extends ExportServer {
                         res.status(200).send(file);
                     }
                     else {
-                        //Send the url for the cached file, will is cached for 10 seconds
+                        const fileUrl = await me.setFile(bucket, `${request.fileName}.${request.fileFormat}`, file)
                         res.status(200).jsonp({
                             success : true,
-                            url     : me.setFile(bucket, file)
+                            url     : fileUrl
                         });
                     }
                 }).catch(e => {
@@ -187,13 +187,13 @@ module.exports = class WebServer extends ExportServer {
      * @param fileBuffer The file buffer pdf/png
      * @returns {*}
      */
-    async setFile(bucketName, fileBuffer) {
-      const fileName = nanoid();
-
+    async setFile(bucketName, fileName, fileBuffer) {
       const bucket = new Storage().bucket(bucketName);
       const file = new File(bucket, fileName);
+
       await file.save(fileBuffer);
       const [url] = await file.getSignedUrl({ action: 'read', expires: Date.now() + 60 * 60 * 1000 /* 1h */ });
+			console.log(url);
 
       return url;
     }
