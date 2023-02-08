@@ -55,8 +55,8 @@ module.exports = class WebServer extends ExportServer {
         }, options);
 
         app.use(addRequestId);
-        app.use(bodyParser.json({ limit : options.maximum || '5000mb' }));
-        app.use(bodyParser.urlencoded({ extended : false, limit : options.maximum || '5000mb' }));
+        app.use(bodyParser.json({ limit : options.maximum || '50mb' }));
+        app.use(bodyParser.urlencoded({ extended : false, limit : options.maximum || '50mb' }));
 
         //Set CORS
         if (options.cors !== 'false') {
@@ -94,7 +94,7 @@ module.exports = class WebServer extends ExportServer {
                 res.set('Content-Length', file.buffer.length);
                 res.status(200).send(file.buffer);
 
-                delete me.files[fileKey];
+                // delete me.files[fileKey]; // Only delete after 5 minutes
             }
             else {
                 res.send('File not found');
