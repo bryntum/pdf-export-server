@@ -106,8 +106,8 @@ module.exports = class WebServer extends ExportServer {
         //Catch the posted request.
         if (!options.dedicated) {
             app.post('/', async (req, res) => {
-                const bucket = req.body.bucket;
                 let request = req.body;
+                const originalRequest = request
 
                 if(request.signedUrl){
                     const bodyAsFile = await doRequest(request.signedUrl);
@@ -132,7 +132,7 @@ module.exports = class WebServer extends ExportServer {
                         res.status(200).send(file);
                     }
                     else {
-                        const fileUrl = await me.setFile(bucket, request, file)
+                        const fileUrl = await me.setFile(originalRequest, file)
                         res.status(200).jsonp({
                             success : true,
                             url     : fileUrl
@@ -187,19 +187,17 @@ module.exports = class WebServer extends ExportServer {
      * @param fileBuffer The file buffer pdf/png
      * @returns {*}
      */
-    async setFile(bucketName, request, fileBuffer) {
-      const date =  new Date().toLocaleString().replace(/[\/:]/g, '-')
-      const fileName = `${request.fileName} ${date}`
-        .replace(/[\/\\:*?"<>|]/g, '')
-        .replace(/\s+/g, '_')
+    async setFile(request, fileBuffer) {
+      const { bucket: bucketName, gcpName, name } = request
 
       const bucket = new Storage().bucket(bucketName);
-      const file = new File(bucket, `${fileName}.${request.fileFormat}`);
+      const file = new File(bucket, gcpName);
 
       await file.save(fileBuffer);
+
       const [url] = await file.getSignedUrl({
         action: 'read',
-        responseDisposition: 'attachment',
+        responseDisposition: `attachment; filename=${name}`,
         expires: Date.now() + 60 * 60 * 1000 /* 1h */
       });
 
