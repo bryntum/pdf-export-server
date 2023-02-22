@@ -196,28 +196,27 @@ module.exports = class WebServer extends ExportServer {
      * @param host This host to fetch from
      * @param request Passed initial request
      * @param file The file buffer pdf/png
-     * @param fileBuffer The file buffer pdf/png
      * @returns {*}
      */
     setFile(host, request, file) {
-      const
-          me      = this,
-          fileKey = nanoid(),
-          url     = host + fileKey;
+        const
+            me      = this,
+            fileKey = nanoid(),
+            url     = host + fileKey;
 
-      me.files[fileKey] = {
-          date       : new Date(),
-          fileFormat : request.fileFormat,
-          fileName   : `${request.fileName || `export-${request.range}`}.${request.fileFormat}`,
-          buffer     : file
-      };
+        me.files[fileKey] = {
+            date       : new Date(),
+            fileFormat : request.fileFormat,
+            fileName   : `${request.fileName || `export-${request.range}`}.${request.fileFormat}`,
+            buffer     : file
+        };
 
-      //You got ten seconds to fetch the file
-      setTimeout(() => {
-          delete me.files[fileKey];
-      }, 10000);
+        //You got ten seconds to fetch the file
+        setTimeout(() => {
+            delete me.files[fileKey];
+        }, 10000);
 
-      return url;
+        return url;
     }
 
     /**
