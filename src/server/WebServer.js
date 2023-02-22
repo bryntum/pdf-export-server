@@ -96,7 +96,7 @@ module.exports = class WebServer extends ExportServer {
                 res.set('Content-Length', file.buffer.length);
                 res.status(200).send(file.buffer);
 
-                // delete me.files[fileKey]; // Only delete after 5 minutes
+                delete me.files[fileKey];
             }
             else {
                 res.send('File not found');
@@ -132,11 +132,20 @@ module.exports = class WebServer extends ExportServer {
                         res.status(200).send(file);
                     }
                     else {
-                        const fileUrl = await me.setFile(originalRequest, file)
-                        res.status(200).jsonp({
-                            success : true,
-                            url     : fileUrl
-                        });
+                        if(options.gcp){
+                          const fileUrl = await me.setGCPFile(originalRequest, file)
+                          res.status(200).jsonp({
+                              success : true,
+                              url     : fileUrl
+                          });
+                        }
+                        else {
+                          //Send the url for the cached file, will is cached for 10 seconds
+                          res.status(200).jsonp({
+                              success : true,
+                              url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, file)
+                          });
+                        }
                     }
                 }).catch(e => {
                     if (e instanceof RequestCancelError) {
@@ -184,10 +193,40 @@ module.exports = class WebServer extends ExportServer {
     /**
      * Stores a file stream temporarily to be fetched on guid
      *
+     * @param host This host to fetch from
+     * @param request Passed initial request
+     * @param file The file buffer pdf/png
      * @param fileBuffer The file buffer pdf/png
      * @returns {*}
      */
-    async setFile(request, fileBuffer) {
+    setFile(host, request, file) {
+      const
+          me      = this,
+          fileKey = nanoid(),
+          url     = host + fileKey;
+
+      me.files[fileKey] = {
+          date       : new Date(),
+          fileFormat : request.fileFormat,
+          fileName   : `${request.fileName || `export-${request.range}`}.${request.fileFormat}`,
+          buffer     : file
+      };
+
+      //You got ten seconds to fetch the file
+      setTimeout(() => {
+          delete me.files[fileKey];
+      }, 10000);
+
+      return url;
+    }
+
+    /**
+     * Stores a file streams on GCP to be fetched on guid
+     *
+     * @param fileBuffer The file buffer pdf/png
+     * @returns {*}
+     */
+    async setGCPFile(request, fileBuffer) {
       const { bucket: bucketName, gcpName, name } = request
 
       const bucket = new Storage().bucket(bucketName);

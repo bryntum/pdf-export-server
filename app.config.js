@@ -17,6 +17,9 @@ const config = {
     // True to pass `--no-sandbox` flag to the chromium
     "no-sandbox"    : true,
 
+    // True to pass `--disable-web-security` flag to the chromium
+    "disable-web-security": true,
+
     // Maximum amount of parallel puppeteer instances to run
     "max-workers"   : 5,
 
@@ -31,7 +34,10 @@ const config = {
 
     // Configuration options for logger
     // Set to false to output log to the console
-    "logger"        : false
+    "logger"        : false,
+
+    // Upload file to GCP instead of temporary buffer
+    "gcp"           : true,
 };
 
 module.exports = { config };
