@@ -1,6 +1,4 @@
-# Based on https://developers.google.com/web/tools/puppeteer/troubleshooting#running_puppeteer_in_docker
-
-FROM node:16.15.0
+FROM --platform=linux/amd64 node:17
 
 RUN apt-get update \
     && apt-get install -y wget gnupg ca-certificates \
@@ -41,15 +39,18 @@ RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
 # Run everything after as non-privileged user.
 USER pptruser
 
-COPY --chown=pptruser:pptruser ["src/", "/home/pptruser/src/"]
-COPY --chown=pptruser:pptruser ["app.config.js", "package.json", "/home/pptruser/"]
+COPY --chown=pptruser:pptruser . /home/pptruser/
 
 WORKDIR /home/pptruser
-
-RUN npm i
+RUN npm install
 
 EXPOSE 8080 8081
 
+# Uncomment this if you need to dev with the docker file and standard environnement 
+# USER root
+# RUN npm install -g nodemon --unsafe-perm=true --allow-root
+# USER pptruser
+# ENTRYPOINT [ "nodemon", "./src/server.js", "-H", "8081" ]
 ENTRYPOINT [ "node", "./src/server.js", "-H", "8081" ]
 
 CMD ["bash"]

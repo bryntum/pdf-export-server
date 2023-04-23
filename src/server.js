@@ -4,6 +4,8 @@ const Commands = require('./commands.js');
 const WebServer = require('./server/WebServer.js');
 let { config } = require('../app.config.js');
 
+console.info("👉 Starting ExportServer");
+
 //Do a check if this is a Pkg executable or is executed from nodejs commandline
 const isPkg = typeof process.pkg !== 'undefined';
 
@@ -66,3 +68,15 @@ else {
     commands.showHelp();
     process.exit();
 }
+
+process.on("SIGTERM", (error) => {
+    console.info("\nGracefully shutting down the server from SIGTERM:");
+    console.error(error);
+    process.exit();
+});
+
+process.on('uncaughtException', (error) => {
+    console.info("\nGracefully shutting down the server from uncaughtException");
+    console.error(error);
+    process.exit();
+})
