@@ -47,10 +47,10 @@ RUN npm install
 EXPOSE 8080 8081
 
 # Uncomment this if you need to dev with the docker file and standard environnement 
-# USER root
-# RUN npm install -g nodemon --unsafe-perm=true --allow-root
-# USER pptruser
-# ENTRYPOINT [ "nodemon", "./src/server.js", "-H", "8081" ]
-ENTRYPOINT [ "node", "./src/server.js", "-H", "8081" ]
+USER root
+RUN npm install -g nodemon --unsafe-perm=true --allow-root
+USER pptruser
+ENTRYPOINT [ "nodemon", "./src/server.js", "-H", "8081" ]
+# ENTRYPOINT [ "node", "./src/server.js", "-H", "8081" ]
 
 CMD ["bash"]
