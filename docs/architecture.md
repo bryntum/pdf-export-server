@@ -302,22 +302,3 @@ regular client which is browsing `http://production.org/app`
 
 Of course, we can let PDF export server to have a local copy of resources like in the scenario with local web server and
 remove export server.
-
-## Troubleshooting
-
-It is difficult to see what's going on in the export server - it is remote, it uses headless
-browser. Before diving into debugging actual server we may try using extensive logging:
-
-```shell
-$ node src/server.js --verbose
-```
-
-This config will log page errors and if there were problems loading resources you can see similar message
-in the log file:
-
-```
-2022-05-13T14:58:47.745Z error: [Worker@3qj8yt1k45egung7cd13n] Page 3/50 reports: Access to font at 
-'http://localhost/grid/resources/fonts/Lato-Regular.woff2' from origin 'null' has been blocked by CORS policy: No 
-'Access-Control-Allow-Origin' header is present on the requested resource.
-location: about:blank
-```
