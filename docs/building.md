@@ -29,41 +29,20 @@ The solution main requirements are listed below. For the full list of required m
 
 **NOTE:** Please read the required libraries licensing info on the projects web-sites.
 
-
 ### Puppeteer
 
-The solution uses puppeteer module to generate PDF and PNG files:
-
-https://www.npmjs.com/package/puppeteer
+The solution uses [puppeteer module](https://www.npmjs.com/package/puppeteer) to generate PDF and PNG files.
 
 When building, puppeteer versions for Windows, Linux and Mac are downloaded and placed into the bin directory in the chromium folder.
 
-We recommend using puppeteer@1.17.0 (default) as it generates PDFs faster than later versions.
+### MuhammaraJS
 
-### HummusJS
-
-PDF streams are concatenated with the "HummusJS" module:
-
-https://www.npmjs.com/package/hummus
-
-The HummusJS module contains a binary which need to be shipped with the server executable. The binary is placed under:
-
-    ./bin/{os}/hummus/binding
-
-Binaries are built for node 8.9.4, so it is recommended to build server using
-same node version. If you have different node version, you might consider
-[Node version manager](https://github.com/creationix/nvm) to switch node
-to 8.9.4 and back. Or you can rebuild hummus binary for required platform and your local node version.
-
-When the binary does not fit the requirements of your operating system then replace the corresponding binary with the one which is built with `npm install`
-
-    ./node_modules/hummus/binding
+PDF streams are concatenated with the [MuhammaraJS module](https://www.npmjs.com/package/muhammara). Muhammara took
+over previous project - HummusJS. It means we can support newer Node versions, but minimal supported version is 14.
 
 ### Merge-img
 
-PNG streams are concatenated with "merge-img" module:
-
-https://www.npmjs.com/package/merge-img
+PNG streams are concatenated with [merge-img module](https://www.npmjs.com/package/merge-img)
 
 ### SSL certificate (if you are running HTTPS)
 
@@ -88,14 +67,11 @@ server address
 
 ### Pkg
 
-The solution is wrapped into an executable with "pkg" module:
-
-https://www.npmjs.com/package/pkg
+The solution is wrapped into an executable with [pkg module](https://www.npmjs.com/package/pkg).
 
 On build the "pkg" module wraps the `./src/server.js` into an OS specific executable. The output is copied to:
 
     ./bin/{os}/
-
 
 ## Building the solution
 
@@ -114,12 +90,8 @@ The output is placed in the bin directory having the following structure:
             - server.key
         - chromium
             - {os}-{version}
-        - hummus
-            - binding
 
 In the `cert` folder you can place your security certificates when running the server as https.
-
-The hummus binary is defaultly shipped and build for Linux/Windows and Mac. When the binary does not fit the requirements of the specific operating system, then copy the binary from the `node_modules` folder as described above.
 
 ## Known problems
 
@@ -128,18 +100,17 @@ The hummus binary is defaultly shipped and build for Linux/Windows and Mac. When
 
 When encountering any problems on the build:
 
-- Check the requirements based on the used packages, like `nodejs -v` is 8+.
-- Delete the `node_modules` folder,
-- Delete the `cert` and `chromium` folders in the bin folder (except the HummusJS binaries - else you have to recopy the hummus binding from the `node_modules` folder).
+- Check the requirements based on the used packages, like `nodejs -v` is 16+.
+- Delete the `node_modules` folder.
+- Delete the `cert` and `chromium` folders in the bin folder.
 - Delete the server executables in the bin folder.
 
 ## Starting the node server
 
-The server can by executed as a node script:
+The server can be executed as a node script:
 
     cd ./server
     node src/server.js
-
 
 <a name="windows"></a>
 
@@ -172,14 +143,14 @@ group policy:
 
 #### Node cannot rename certain file
 
-At some point during the build process you might see exception of the
-following nature:
+At some point during the build process you might see following exception:
 
     Error: EPERM: operation not permitted, rename
 
-There is a similar [issue on github](https://github.com/react-community/create-react-native-app/issues/191)
-which shows that multiple users experience this problem with anti-virus
-software enabled. There might be a Windows Defender enabled on your machine and then disabling it fixes the issue. But disabling anti-virus completely is not safe. You might consider adding *node.exe* to the list of exceptions for your anti-virus software.
+There is a similar [issue on GitHub](https://github.com/react-community/create-react-native-app/issues/191)
+which shows that multiple users experience this problem with antivirus software enabled. There might be a Windows
+Defender enabled on your machine and then disabling it fixes the issue. But disabling antivirus completely is not safe.
+You might consider adding *node.exe* to the list of exceptions for your antivirus software.
 [Here](https://blog.johnnyreilly.com/2017/06/windows-defender-step-away-from-npm.html)
 is a short sum-up of this issue and steps to fix Windows Defender.
 
@@ -214,11 +185,11 @@ rough edges still (like puppeteer support).
 
 Server can be built/run in WSL, with few limitations. See compatibility table below:
 
-| Built on | Running on WSL       | Running on Windows | Running on Linux |
+| Built on |    Running on WSL    | Running on Windows | Running on Linux |
 |----------|:--------------------:|:------------------:|:----------------:|
-| WSL      | PDF only w/o sandbox | Doesn't work       | PDF/PNG          |
-| Windows  | PDF only w/o sandbox | PDF/PNG            | PDF/PNG          |
-| Linux    | PDF only w/o sandbox | PDF/PNG            | PDF/PNG          |
+| WSL      | PDF only w/o sandbox |    Doesn't work    |     PDF/PNG      |
+| Windows  | PDF only w/o sandbox |      PDF/PNG       |     PDF/PNG      |
+| Linux    | PDF only w/o sandbox |      PDF/PNG       |     PDF/PNG      |
 
 Run server inside WSL with no sandbox, e.g.:
 
