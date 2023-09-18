@@ -1,4 +1,4 @@
-const hummus = require('hummus');
+const muhammara = require('muhammara');
 const memoryStreams = require('memory-streams');
 const mergeImg = require('merge-img');
 const { Queue } = require('../queue.js');
@@ -25,8 +25,8 @@ module.exports = class ExportServer {
     }
 
     /**
-     * Concatenate an array of PDF buffers and return the combined result. This function uses the hummus package, a
-     * copy the hummus binary is delivered next to the executable.
+     * Concatenate an array of PDF buffers and return the combined result. This function uses the muhammara package, a
+     * copy the muhammara binary is delivered next to the executable.
      *
      * @param {Buffer[]} pdfs
      * @returns {Promise<Buffer>}
@@ -41,13 +41,13 @@ module.exports = class ExportServer {
 
             const
                 first     = pdfs.shift(),
-                firstPage = new hummus.PDFRStreamForBuffer(first),
-                pdfWriter = hummus.createWriterToModify(firstPage, new hummus.PDFStreamForResponse(outStream));
+                firstPage = new muhammara.PDFRStreamForBuffer(first),
+                pdfWriter = muhammara.createWriterToModify(firstPage, new muhammara.PDFStreamForResponse(outStream));
 
             let next = pdfs.shift();
 
             while (next) {
-                const nextPage = new hummus.PDFRStreamForBuffer(next);
+                const nextPage = new muhammara.PDFRStreamForBuffer(next);
                 pdfWriter.appendPDFPagesFromPDF(nextPage);
                 next = pdfs.shift();
             }
