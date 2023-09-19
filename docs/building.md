@@ -37,8 +37,7 @@ When building, puppeteer versions for Windows, Linux and Mac are downloaded and 
 
 ### MuhammaraJS
 
-PDF streams are concatenated with the [MuhammaraJS module](https://www.npmjs.com/package/muhammara). Muhammara took
-over previous project - HummusJS. It means we can support newer Node versions, but minimal supported version is 14.
+PDF streams are concatenated with the [MuhammaraJS module](https://www.npmjs.com/package/muhammara). Muhammara replaces the previously used HummusJS module, which is no longer maintained. It means we now support newer Node versions, but minimal supported version is 14.
 
 ### Merge-img
 
@@ -100,10 +99,10 @@ In the `cert` folder you can place your security certificates when running the s
 
 When encountering any problems on the build:
 
-- Check the requirements based on the used packages, like `nodejs -v` is 16+.
+- Check the requirements based on the used packages, for example that `nodejs -v` is 16+.
 - Delete the `node_modules` folder.
-- Delete the `cert` and `chromium` folders in the bin folder.
-- Delete the server executables in the bin folder.
+- Delete the `cert` and `chromium` folders in the `bin` folder.
+- Delete the server executables in the `bin` folder.
 
 ## Starting the node server
 
@@ -143,14 +142,14 @@ group policy:
 
 #### Node cannot rename certain file
 
-At some point during the build process you might see following exception:
+At some point during the build process you might see the following exception:
 
     Error: EPERM: operation not permitted, rename
 
 There is a similar [issue on GitHub](https://github.com/react-community/create-react-native-app/issues/191)
-which shows that multiple users experience this problem with antivirus software enabled. There might be a Windows
-Defender enabled on your machine and then disabling it fixes the issue. But disabling antivirus completely is not safe.
-You might consider adding *node.exe* to the list of exceptions for your antivirus software.
+which shows that multiple users experience this problem with antivirus software enabled. Windows
+Defender might be enabled on your machine, and then disabling it fixes the issue. But disabling antivirus completely is not safe.
+Instead we recommend adding *node.exe* to the list of exceptions for your antivirus software.
 [Here](https://blog.johnnyreilly.com/2017/06/windows-defender-step-away-from-npm.html)
 is a short sum-up of this issue and steps to fix Windows Defender.
 
