@@ -50,7 +50,7 @@ class Downloader {
      * @return {string}
      */
     static defaultRevision() {
-        return require(path.join(PROJECT_ROOT, 'package.json')).puppeteer.chromium_revision;
+        return require('puppeteer/lib/cjs/puppeteer/revisions.js').PUPPETEER_REVISIONS.chromium;
     }
 
     /**
