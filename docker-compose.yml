@@ -4,6 +4,8 @@ services:
         build: .
         image: bryntum_pdfexport_server
         container_name: bryntum_pdfexport_server
+        # Allows Apple M chips to run this image
+        platform: linux/amd64
         ports:
             - "8080:8080"
             - "8081:8081"
