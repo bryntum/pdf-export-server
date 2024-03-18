@@ -89,7 +89,7 @@ async function build() {
 
 async function createExecutables() {
     console.log('Create server executables');
-    await exec(['./src/server.js', '--out-path', buildPath]);
+    await exec(['.', '--out-path', buildPath, '--compress', 'GZip',]);
 }
 
 function mkDir(dir) {
