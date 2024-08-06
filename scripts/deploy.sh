@@ -24,18 +24,30 @@ if [ -z "$3" ]
         image_tag=$3
 fi
 
-if [ -z "$4" ]
+# Ensure at least two regions are provided
+if [ -z "$4" ] || [ -z "$5" ]
     then
-        echo "ERROR: Argument 4 (region) is required"
+        echo "ERROR: At least two regions are required"
         exit 1
     else
-        region=$4
+        region1=$4
+        region2=$5
 fi
 
-gcloud run deploy "$service_name" \
-    --image "us-docker.pkg.dev/combocurve-registry/combocurve-docker/$service_name:$image_tag" \
-    --region "$region" \
-    --platform managed \
-    --flags-file .run.yaml \
-    --set-env-vars NODE_ENV=production \
-    || exit 1
+deploy_service() {
+    local region=$1
+    echo "Deploying to region: $region"
+
+    gcloud run deploy "$service_name" \
+        --image "us-docker.pkg.dev/combocurve-registry/combocurve-docker/$service_name:$image_tag" \
+        --region "$region" \
+        --platform managed \
+        --flags-file .run.yaml \
+        --set-env-vars NODE_ENV=production \
+        || exit 1
+}
+
+deploy_service "$region1"
+deploy_service "$region2"
+
+echo "Deployment to both regions completed successfully"
