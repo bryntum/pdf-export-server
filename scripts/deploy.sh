@@ -33,7 +33,7 @@ if [ -z "$4" ]
 fi
 
 gcloud run deploy "$service_name" \
-    --image "gcr.io/$project_id/$service_name:$image_tag" \
+    --image "us-docker.pkg.dev/combocurve-registry/combocurve-docker/$service_name:$image_tag" \
     --region "$region" \
     --platform managed \
     --flags-file .run.yaml \

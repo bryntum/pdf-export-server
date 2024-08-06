@@ -23,7 +23,7 @@ steps:
       ]
 
 images:
-  - "gcr.io/$PROJECT_ID/$_SERVICE_NAME:$COMMIT_SHA"
+  - "us-docker.pkg.dev/combocurve-registry/combocurve-docker/$_SERVICE_NAME:$COMMIT_SHA"
 
 tags:
   - "cloud-run"

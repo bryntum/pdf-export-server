@@ -24,7 +24,7 @@ if [ -z "$3" ]
         image_tag=$3
 fi
 
-image_uri="gcr.io/$project_id/$service_name:$image_tag"
+image_uri="us-docker.pkg.dev/combocurve-registry/combocurve-docker/$service_name:$image_tag"
 
 docker build \
     -t "$image_uri" \
