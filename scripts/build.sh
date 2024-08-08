@@ -34,6 +34,8 @@ if ! docker manifest inspect "${{ image_uri }}"; then
     . || exit 1
 
     docker push "$image_uri" || exit 1
+else
+    exit 1
 fi
 
 
