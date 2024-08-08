@@ -26,9 +26,14 @@ fi
 
 image_uri="us-docker.pkg.dev/combocurve-registry/combocurve-docker/$service_name:$image_tag"
 
-docker build \
+if ! docker manifest inspect "${{ image_uri }}"; then
+    echo "image_exists=false"
+    docker build \
     -t "$image_uri" \
     --build-arg SERVICE_NAME_FOLDER=./ \
     . || exit 1
 
-docker push "$image_uri" || exit 1
+    docker push "$image_uri" || exit 1
+fi
+
+

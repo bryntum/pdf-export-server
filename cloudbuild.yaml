@@ -1,7 +1,6 @@
 substitutions:
   _SERVICE_NAME: <service-name>
-  _DEPLOY_REGION_1: <region-1>
-  _DEPLOY_REGION_2: <region-2>
+  _DEPLOY_REGION: <region>
 
 steps:
   # Build the container image
@@ -20,8 +19,7 @@ steps:
         "$PROJECT_ID",
         "$_SERVICE_NAME",
         "$COMMIT_SHA",
-        "$_DEPLOY_REGION_1",
-        "$_DEPLOY_REGION_2"
+        "$_DEPLOY_REGION",
       ]
 
 images:
