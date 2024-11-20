@@ -86,4 +86,4 @@ Most likely there is a problem on the server, see [troubleshooting](docs/trouble
 ### Cannot export using HTTPS
 
 You can see errors like `NET::ERR_CERT_AUTHORITY_INVALID` or CORS exception (in Firefox). See
- [Make browser to accept self-signed certificate](#self-signed-certificate) section for more info.
+ [Make browser to accept self-signed certificate](docs/building.md#self-signed-certificate) section for more info.
