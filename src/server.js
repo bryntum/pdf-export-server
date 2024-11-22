@@ -66,3 +66,9 @@ else {
     commands.showHelp();
     process.exit();
 }
+
+process.on('uncaughtException', (error) => {
+    console.info("\nGracefully shutting down the server from uncaughtException");
+    console.error(error);
+    process.exit();
+})
