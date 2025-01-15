@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { EventEmitter } = require('events');
 const puppeteer = require('puppeteer');
 const generate = require('nanoid/generate');
@@ -246,7 +247,7 @@ class Queue extends Loggable {
      * @param {String} params.requestId
      * @param {String[]} params.items HTML to convert to PDF/PNG
      * @param {Object} params.config
-     * @returns {Promise<Buffer[]>}
+     * @returns {Promise<Uint8Array[]>}
      */
     async queue({ requestId, items, config }) {
         const me = this;
@@ -593,7 +594,7 @@ class Worker extends Loggable {
      * @param page
      * @param html
      * @param config
-     * @returns {Promise<Buffer>}
+     * @returns {Promise<Uint8Array>}
      */
     async processPageIntoPdfBuffer(page, html, config)  {
         const me = this;
@@ -632,7 +633,7 @@ class Worker extends Loggable {
      * @param page
      * @param html
      * @param config
-     * @returns {Promise<Buffer>}
+     * @returns {Promise<Uint8Array>}
      */
     async processPageIntoPngBuffer(page, html, config)  {
         const me = this;

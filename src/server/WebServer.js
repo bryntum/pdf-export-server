@@ -70,8 +70,8 @@ module.exports = class WebServer extends ExportServer {
                 res.set('Content-Disposition', 'form-data; filename="' + file.fileName + '"');
 
                 res.set('Access-Control-Expose-Headers', 'Content-Length');
-                res.set('Content-Length', file.buffer.length);
-                res.status(200).send(file.buffer);
+                res.status(200);
+                file.fileStream.pipe(res);
 
                 delete me.files[fileKey];
             }
@@ -94,19 +94,20 @@ module.exports = class WebServer extends ExportServer {
                 me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
 
                 //Pass the request to the processFn
-                me.exportRequestHandler(request, req.id, req).then(file => {
+                me.exportRequestHandler(request, req.id, req).then(fileStream => {
                     me.logger.log('info', `POST request ${req.id} succeeded`);
 
                     //On binary the buffer is directly sent to the client, else store file locally in memory for 10 seconds
                     if (request.sendAsBinary) {
                         res.set('Content-Type', 'application/octet-stream');
-                        res.status(200).send(file);
+                        res.status(200);
+                        fileStream.pipe(res);
                     }
                     else {
                         //Send the url for the cached file, will is cached for 10 seconds
                         res.status(200).jsonp({
                             success : true,
-                            url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, file)
+                            url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, fileStream)
                         });
                     }
                 }).catch(e => {
@@ -157,10 +158,10 @@ module.exports = class WebServer extends ExportServer {
      *
      * @param host This host to fetch from
      * @param request Passed initial request
-     * @param file The file buffer pdf/png
+     * @param fileStream The pdf/png file stream
      * @returns {*}
      */
-    setFile(host, request, file) {
+    setFile(host, request, fileStream) {
         const
             me      = this,
             fileKey = nanoid(),
@@ -170,7 +171,7 @@ module.exports = class WebServer extends ExportServer {
             date       : new Date(),
             fileFormat : request.fileFormat,
             fileName   : `${request.fileName || `export-${request.range}`}.${request.fileFormat}`,
-            buffer     : file
+            fileStream
         };
 
         //You got ten seconds to fetch the file

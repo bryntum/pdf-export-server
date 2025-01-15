@@ -1,4 +1,5 @@
-const hummus = require('hummus');
+const muhammara = require('muhammara');
+const stream = require('stream');
 const memoryStreams = require('memory-streams');
 const mergeImg = require('merge-img');
 const { Queue } = require('../queue.js');
@@ -25,38 +26,36 @@ module.exports = class ExportServer {
     }
 
     /**
-     * Concatenate an array of PDF buffers and return the combined result. This function uses the hummus package, a
-     * copy the hummus binary is delivered next to the executable.
+     * Concatenate an array of PDF buffers and return the combined result. This function uses the muhammara package, a
+     * copy the muhammara binary is delivered next to the executable.
      *
-     * @param {Buffer[]} pdfs
-     * @returns {Promise<Buffer>}
+     * @param {Uint8Array[]} pdfs
+     * @returns {Promise<module:stream.internal.PassThrough>}
      */
     async combinePdfBuffers(pdfs) {
         const outStream = new memoryStreams.WritableStream();
 
         try {
-            if (pdfs.length === 1) {
-                return pdfs[0];
-            }
-
             const
                 first     = pdfs.shift(),
-                firstPage = new hummus.PDFRStreamForBuffer(first),
-                pdfWriter = hummus.createWriterToModify(firstPage, new hummus.PDFStreamForResponse(outStream));
+                firstPage = new muhammara.PDFRStreamForBuffer(first),
+                pdfWriter = muhammara.createWriterToModify(firstPage, new muhammara.PDFStreamForResponse(outStream));
 
             let next = pdfs.shift();
 
             while (next) {
-                const nextPage = new hummus.PDFRStreamForBuffer(next);
+                const nextPage = new muhammara.PDFRStreamForBuffer(next);
                 pdfWriter.appendPDFPagesFromPDF(nextPage);
                 next = pdfs.shift();
             }
 
             pdfWriter.end();
-            const mergedBuffer = outStream.toBuffer();
             outStream.end();
 
-            return mergedBuffer;
+            const result = new stream.PassThrough();
+            result.end(outStream.toBuffer());
+
+            return result;
         }
         catch (err) {
             outStream.end();
@@ -98,7 +97,7 @@ module.exports = class ExportServer {
      * @param requestData
      * @param requestId UUID of the request
      * @param [request] request instance
-     * @returns {Promise<Buffer>}
+     * @returns {Promise<Stream>}
      */
     async exportRequestHandler(requestData, requestId, request) {
         const

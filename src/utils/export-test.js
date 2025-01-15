@@ -10,13 +10,15 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
+const fname = process.argv[2] ?? 'test.html';
+
 class Server {
     async setup() {
         if (!this.browser) {
             this.browser = await puppeteer.launch();
         }
 
-        this.content = fs.readFileSync('paging-test-2.html', 'utf-8');
+        this.content = fs.readFileSync(`${fname}.html`, 'utf-8');
     }
 
     async export() {
@@ -36,7 +38,7 @@ class Server {
             await page.emulateMediaType('print');
 
             await page.pdf({
-                path: 'paging-test-2.pdf',
+                path: `${fname}.pdf`,
                 printBackground : true,
                 margin : {
                     top    : 0,
