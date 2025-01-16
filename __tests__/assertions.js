@@ -43,7 +43,7 @@ async function getFile(json, protocol, fileFormat, host, port, timeout) {
         });
 
         request.on('timeout', () => {
-            request.abort();
+            request.destroy();
 
             reject(new Error('timeout'));
         });
