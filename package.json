@@ -1,6 +1,6 @@
 {
   "name": "@bryntum/pdf-export-server",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Standalone PDF export server",
   "keywords": [
     "bryntum",
