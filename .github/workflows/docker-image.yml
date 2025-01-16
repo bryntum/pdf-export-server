@@ -2,6 +2,11 @@ name: Build Docker Image
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag'
+        required: true
+        default: 'latest'
   release:
     types:
       - published
@@ -17,7 +22,8 @@ jobs:
         with:
           images: bryntum/pdf-export-server
           tags: |
-            ${{ github.event.release.tag_name }}
+            ${{ github.event.releases.tag_name }}
+            ${{ inputs.tag }}
             latest
       -
         name: Set up Docker Buildx
