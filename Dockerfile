@@ -1,6 +1,6 @@
 # Based on https://developers.google.com/web/tools/puppeteer/troubleshooting#running_puppeteer_in_docker
 
-FROM node:16.15.0
+FROM node:20.18.1
 
 RUN apt-get update \
     && apt-get install -y wget gnupg ca-certificates \
@@ -51,5 +51,3 @@ RUN npm i
 EXPOSE 8080 8081
 
 ENTRYPOINT [ "node", "./src/server.js", "-H", "8081" ]
-
-CMD ["bash"]
