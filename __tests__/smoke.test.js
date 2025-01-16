@@ -32,7 +32,7 @@ describe('Should export over HTTP', () => {
         const
             host       = 'localhost',
             protocol   = 'http',
-            port       = 8081,
+            port       = 8082,
             workers    = 1,
             fileFormat = 'pdf';
 
@@ -40,9 +40,9 @@ describe('Should export over HTTP', () => {
 
         await assertExportedFile({ protocol, host, port: server.httpPort, fileFormat });
 
-        // Waiting for 30 seconds, export server should kill all idle workers
+        // Waiting for 10 seconds, export server should kill all idle workers
         await new Promise(resolve => {
-            setTimeout(() => resolve(), 30000);
+            setTimeout(() => resolve(), 10000);
         });
 
         const promises = [
@@ -50,7 +50,7 @@ describe('Should export over HTTP', () => {
             new Promise(resolve => {
                 setTimeout(() => {
                     resolve('timeout');
-                }, 1000 * 60 * 2);
+                }, 1000 * 30);
             })
         ];
 
@@ -59,7 +59,7 @@ describe('Should export over HTTP', () => {
         await Promise.allSettled(promises);
 
         if (winner === 'timeout') {
-            fail('Server have not returned file in 2 minutes');
+            fail('Server have not returned file in 30 seconds');
         }
     });
 });
@@ -69,7 +69,7 @@ describe('Should export over HTTPS', () => {
         test('Should export to PDF', async () => {
             const
                 protocol = 'https',
-                port     = 8081,
+                port     = 8083,
                 workers  = 1;
 
             server = await startServer({ protocol, port, workers, logger : getLoggerConfig('smoke_https_pdf') })

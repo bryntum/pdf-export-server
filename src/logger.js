@@ -3,8 +3,6 @@ require('winston-daily-rotate-file');
 
 let loggers = {};
 
-let loggerInstance;
-
 module.exports = {
     getLogger(config = {}) {
         let result;

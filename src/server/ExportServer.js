@@ -117,7 +117,7 @@ module.exports = class ExportServer {
                 },
                 dimension = format.split('*');
 
-            //format can be send in format 12in*14in. This has precedence over A4, Letter et cetera
+            // dimensions can be set in format 12in*14in. This has precedence over A4, Letter etc
             if (dimension.length === 2) {
                 config.width = dimension[0];
                 config.height = dimension[1];

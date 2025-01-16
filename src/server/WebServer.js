@@ -20,7 +20,7 @@ module.exports = class WebServer extends ExportServer {
     }
 
     /**
-     * Create the and initialise the webserver
+     * Create and initialise the webserver
      *
      * @param options The passed options from the command line
      */
@@ -230,14 +230,6 @@ module.exports = class WebServer extends ExportServer {
                 });
             });
         }
-    }
-
-    getHttpServer() {
-        return this.httpServer;
-    }
-
-    getHttpsServer() {
-        return this.httpsServer;
     }
 
     /**

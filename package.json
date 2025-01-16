@@ -32,6 +32,7 @@
     "measure": "node ./src/utils/measure-export-time.js"
   },
   "dependencies": {
+    "@types/express": "^5.0.0",
     "body-parser": "~1.20.3",
     "command-line-args": "^6.0.1",
     "command-line-usage": "^7.0.3",
