@@ -17,8 +17,8 @@ jobs:
         with:
           images: bryntum/pdf-export-server
           tags: |
-            bryntum/pdf-export-server:${{ github.event.release.tag_name }}
-            bryntum/pdf-export-server:latest
+            ${{ github.event.release.tag_name }}
+            latest
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
