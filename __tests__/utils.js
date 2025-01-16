@@ -75,7 +75,7 @@ async function startServer(config = {}) {
         [protocol]       : port,
         'max-workers'    : workers,
         findNextHttpPort : true,
-        chromiumArgs     : isWSL() ? ['--no-sandbox'] : []
+        chromiumArgs     : ['--no-sandbox']
     }, config);
 
     const server = new WebServer(config);
