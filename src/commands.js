@@ -1,37 +1,42 @@
-Getopt = require('node-getopt');
+const commandLineArgs = require('command-line-args');
+const getUsage = require('command-line-usage');
 
 module.exports = class Commands {
 
     constructor() {
-        this.getopt = new Getopt([
-            ['h',   'http=PORT'             , 'Start http server on port'],
-            ['H',   'https=PORT'            , 'Start https server on port'],
-            ['c',   'cors=HOST'             , 'CORS origin, default value "*". Set to "false" to disable CORS'],
-            ['m',   'maximum=SIZE'          , 'Maximum upload size (default 50mb)'],
-            ['r',   'resources=PATH'        , 'The absolute path to the resource directory. This path will be accessible via the webserver'],
-            ['',    'max-workers=WORKERS'   , 'Maximum amount of workers (puppeteer instances)', 5],
-            ['',    'level=LEVEL'           , 'Specify log level (error, warn, verbose). Default "error"'],
-            ['',    'timeout=TIMEOUT'       , 'Request timeout time in seconds'],
-            ['',    'quick'                 , 'Provide to only wait for page load event'],
-            ['',    'no-sandbox'            , 'Provide to pass no-sandbox argument to chromium'],
-            ['',    'disable-web-security'  , 'Provide to pass disable-web-security argument to chromium'],
-            ['',    'no-config'             , 'Provide to ignore app.config.js'],
-            ['',    'verbose'               , 'Alias for --level=verbose'],
-            ['',    'help'                  , 'Show help message']
-        ]);
-
-        this.getopt.setHelp(
-            'Usage: ./server [OPTION]\n' +
-            '\n' +
-            '[[OPTIONS]]\n'
-        );
+        this.optionDefinitions = [
+            { name: 'http', alias: 'h', type: Number, description: 'Start http server on port' },
+            { name: 'https', alias: 'H', type: Number, description: 'Start https server on port' },
+            { name: 'cors', alias: 'c', type: String, description: 'CORS origin, default value "*". Set to "false" to disable CORS' },
+            { name: 'maximum', alias: 'm', type: String, description: 'Maximum upload size (default 50mb)' },
+            { name: 'resources', alias: 'r', type: String, description: 'The absolute path to the resource directory. This path will be accessible via the webserver' },
+            { name: 'max-workers', type: Number, defaultValue: 5, description: 'Maximum amount of workers (puppeteer instances)' },
+            { name: 'level', type: String, description: 'Specify log level (error, warn, verbose). Default "error"' },
+            { name: 'timeout', type: Number, description: 'Request timeout time in seconds' },
+            { name: 'quick', type: Boolean, description: 'Provide to only wait for page load event' },
+            { name: 'no-sandbox', type: Boolean, description: 'Provide to pass no-sandbox argument to chromium' },
+            { name: 'disable-web-security', type: Boolean, description: 'Provide to pass disable-web-security argument to chromium' },
+            { name: 'no-config', type: Boolean, description: 'Provide to ignore app.config.js' },
+            { name: 'verbose', type: Boolean, description: 'Alias for --level=verbose' },
+            { name: 'help', type: Boolean, description: 'Show help message' }
+        ];
     }
 
     showHelp() {
-        this.getopt.showHelp();
+        const sections = [
+            {
+                header: 'Usage',
+                content: './server [OPTION]'
+            },
+            {
+                header: 'Options',
+                optionList: this.optionDefinitions
+            }
+        ];
+        console.log(getUsage(sections));
     }
 
     getOptions() {
-        return this.getopt.parse(process.argv.slice(2));
+        return commandLineArgs(this.optionDefinitions);
     }
 };

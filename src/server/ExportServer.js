@@ -67,13 +67,15 @@ module.exports = class ExportServer {
      * Concatenate an array of Png buffers and return the combined result.
      *
      * @param pngs
-     * @returns {Promise<Buffer>}
+     * @returns {Promise<module:stream.internal.PassThrough>}
      */
     async combinePngBuffers(pngs) {
         return new Promise((resolve, reject) => {
             mergeImg(pngs, { direction : true }).then(img => {
                 img.getBuffer('image/png', (s, buf) => {
-                    resolve(buf);
+                    const result = new stream.PassThrough();
+                    result.end(buf);
+                    resolve(result);
                 });
             }).catch(err => reject(err));
         });

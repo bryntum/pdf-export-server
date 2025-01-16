@@ -565,6 +565,7 @@ class Worker extends Loggable {
                     break;
                 case 'png':
                     result = await me.processPageIntoPngBuffer(page, html, config);
+                    result = Buffer.from(result);
                     break;
             }
 

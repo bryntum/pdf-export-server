@@ -19,7 +19,7 @@ const chromiumExecutablePath = (isPkg
 
 //Read commandline options
 const commands = new Commands();
-const options = commands.getOptions().options;
+const options = commands.getOptions();
 
 if (options.verbose) {
     options.level = 'verbose';
