@@ -20,6 +20,10 @@ Live demos available here:
 
 ### Using NodeJS
 
+Supported Node versions:
+1.0.0+: Node >=8 <14
+2.0.0+: Node >= 20
+
 1. Check out this repository
 ```shell
 ~$ git clone git@github.com:bryntum/pdf-export-server.git
