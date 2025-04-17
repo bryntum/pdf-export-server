@@ -7,6 +7,7 @@ module.exports = class Commands {
         this.optionDefinitions = [
             { name: 'http', alias: 'h', type: Number, description: 'Start http server on port' },
             { name: 'https', alias: 'H', type: Number, description: 'Start https server on port' },
+            { name: 'websocket', alias: 'w', type: Boolean, description: 'Start websocket server' },
             { name: 'cors', alias: 'c', type: String, description: 'CORS origin, default value "*". Set to "false" to disable CORS' },
             { name: 'maximum', alias: 'm', type: String, description: 'Maximum upload size (default 50mb)' },
             { name: 'resources', alias: 'r', type: String, description: 'The absolute path to the resource directory. This path will be accessible via the webserver' },

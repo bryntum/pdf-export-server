@@ -4,11 +4,13 @@ const bodyParser = require('body-parser');
 const nanoid = require('nanoid');
 const http = require('http');
 const https = require('https');
+const { server : WebSocketServer, connection : WebSocketConnection } = require('websocket');
 const fs = require('fs');
 const path = require('path');
 const serveStatic = require('serve-static');
 const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
+const { getId } = require('../utils/helpers.js');
 
 module.exports = class WebServer extends ExportServer {
     constructor(config) {
@@ -56,80 +58,13 @@ module.exports = class WebServer extends ExportServer {
             app.use('/resources', serveStatic(options.resources));
         }
 
+        app.get('/status', me.handleStatus.bind(me));
+
         //Get the file, fileKey will be a guid. This serves the pdf
-        app.get('/:fileKey/', (req, res) => {
-            const
-                fileKey = req.params.fileKey,
-                file    = me.files[fileKey];
-
-            if (file) {
-                res.set('Content-Type', 'application/' + file.fileFormat);
-
-                // Use "inline" to be able to preview PDF file in a browser tab
-                // res.set('Content-Disposition', 'inline; filename="' + file.fileName + '"');
-                res.set('Content-Disposition', 'form-data; filename="' + file.fileName + '"');
-
-                res.set('Access-Control-Expose-Headers', 'Content-Length');
-                res.status(200);
-                file.fileStream.pipe(res);
-
-                delete me.files[fileKey];
-            }
-            else {
-                res.send('File not found');
-            }
-        });
+        app.get('/:fileKey/', me.handleFileKey.bind(me));
 
         //Catch the posted request.
-        if (!options.dedicated) {
-            app.post('/', (req, res) => {
-                const request = req.body;
-
-                //Accepts encoded and parsed html fragments. If still encoded, then parse
-                if (typeof request.html === 'string') {
-                    request.html = JSON.parse(request.html);
-                }
-
-                me.logger.log('info', `POST request ${req.id}`);
-                me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
-
-                //Pass the request to the processFn
-                me.exportRequestHandler(request, req.id, req).then(fileStream => {
-                    me.logger.log('info', `POST request ${req.id} succeeded`);
-
-                    //On binary the buffer is directly sent to the client, else store file locally in memory for 10 seconds
-                    if (request.sendAsBinary) {
-                        res.set('Content-Type', 'application/octet-stream');
-                        res.status(200);
-                        fileStream.pipe(res);
-                    }
-                    else {
-                        //Send the url for the cached file, will is cached for 10 seconds
-                        res.status(200).jsonp({
-                            success : true,
-                            url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, fileStream)
-                        });
-                    }
-                }).catch(e => {
-                    if (e instanceof RequestCancelError) {
-                        // Shorthand call doesn't work here for some reason
-                        me.logger.log('verbose', `POST request ${req.id} cancelled`);
-                    }
-                    else {
-                        // Shorthand call doesn't work here for some reason
-                        me.logger.log('warn', `POST request ${req.id} failed`);
-                        me.logger.log('warn', e.stack);
-
-                        //Make up min 500 or 200?
-                        res.status(request.sendAsBinary ? 500 : 200).jsonp({
-                            success : false,
-                            msg     : e.message,
-                            stack   : e.stack
-                        });
-                    }
-                });
-            });
-        }
+        app.post('/', me.handleExportPOSTRequest.bind(me));
 
         // order matters, this logger should be the last one
         app.use((err, req, res, next) => {
@@ -142,15 +77,35 @@ module.exports = class WebServer extends ExportServer {
             me.findNextHttpPort = options.findNextHttpPort;
             me.httpServer = me.createHttpServer();
             me.httpServer.timeout = options.timeout;
+
+            if (options.websocket) {
+                me.wsServer = new WebSocketServer({
+                    httpServer : me.httpServer,
+                    maxReceivedFrameSize : 0x1000000,
+                    maxReceivedMessageSize : 0x5000000,
+                });
+
+                me.wsServer.on('request', me.handleExportWebSocketRequest.bind(me));
+                me.wsServer._connectionTimeout = options.timeout;
+            }
         }
 
-        if (options.https) {
+        if (0 && options.https) {
             me.httpsPort = options.https;
             //Create https server and pass certificate folder
             me.httpsServer = me.createHttpsServer(path.join(process.cwd(), 'cert'));
             me.httpsServer.timeout = options.timeout;
-        }
 
+            if (options.websocket) {
+                me.wssServer = new WebSocketServer({
+                    httpServer : me.httpsServer,
+                    maxReceivedFrameSize : 0x1000000,
+                    maxReceivedMessageSize : 0x5000000,
+                });
+
+                me.wssServer.on('request', me.handleExportWebSocketRequest.bind(me));
+            }
+        }
     }
 
     /**
@@ -180,6 +135,140 @@ module.exports = class WebServer extends ExportServer {
         }, 10000);
 
         return url;
+    }
+
+    handleStatus(req, res) {
+        res.status(200).jsonp({
+            success : true,
+            websocket : this.wsServer != null || this.wssServer != null
+        });
+    }
+
+    handleFileKey(req, res) {
+        const
+            fileKey = req.params.fileKey,
+            file    = this.files[fileKey];
+
+        if (file) {
+            res.set('Content-Type', 'application/' + file.fileFormat);
+
+            // Use "inline" to be able to preview PDF file in a browser tab
+            // res.set('Content-Disposition', 'inline; filename="' + file.fileName + '"');
+            res.set('Content-Disposition', 'form-data; filename="' + file.fileName + '"');
+
+            res.set('Access-Control-Expose-Headers', 'Content-Length');
+            res.status(200);
+            file.fileStream.pipe(res);
+
+            delete this.files[fileKey];
+        }
+        else {
+            res.send('File not found');
+        }
+    }
+
+    handleExportPOSTRequest(req, res) {
+        const request = req.body;
+        const me = this;
+
+        //Accepts encoded and parsed html fragments. If still encoded, then parse
+        if (typeof request.html === 'string') {
+            request.html = JSON.parse(request.html);
+        }
+
+        me.logger.log('info', `POST request ${req.id}`);
+        me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
+
+        //Pass the request to the processFn
+        me.exportRequestHandler(request, req.id, req.socket).then(fileStream => {
+            me.logger.log('info', `POST request ${req.id} succeeded`);
+
+            //On binary the buffer is directly sent to the client, else store file locally in memory for 10 seconds
+            if (request.sendAsBinary) {
+                res.set('Content-Type', 'application/octet-stream');
+                res.status(200);
+                fileStream.pipe(res);
+            }
+            else {
+                //Send the url for the cached file, will is cached for 10 seconds
+                res.status(200).jsonp({
+                    success : true,
+                    url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, fileStream)
+                });
+            }
+        }).catch(e => {
+            if (e instanceof RequestCancelError) {
+                // Shorthand call doesn't work here for some reason
+                me.logger.log('verbose', `POST request ${req.id} cancelled`);
+            }
+            else {
+                // Shorthand call doesn't work here for some reason
+                me.logger.log('warn', `POST request ${req.id} failed`);
+                me.logger.log('warn', e.stack);
+
+                //Make up min 500 or 200?
+                res.status(request.sendAsBinary ? 500 : 200).jsonp({
+                    success : false,
+                    msg     : e.message,
+                    stack   : e.stack
+                });
+            }
+        });
+    }
+
+    handleExportWebSocketRequest(request) {
+        const connection = request.accept();
+        const me = this;
+        const { timeout } = (me.httpServer || me.httpsServer);
+        const connectionId = getId();
+
+        const config = {};
+        const pages = [];
+
+        let timer;
+
+        me.logger.log('info', `[WebSocket@${connectionId}] Connection opened`);
+        me.logger.log('verbose', `[WebSocket@${connectionId}] Remote address: ${connection.remoteAddress}`);
+
+        connection.on('message', async function (message) {
+            if (!timer) {
+                timer = setTimeout(() => {
+                    connection.drop(WebSocketConnection.CLOSE_REASON_NORMAL, `Export request did not finish in ${timeout}ms`)
+                }, timeout);
+            }
+
+            if (message.type === 'utf8') {
+                const request = JSON.parse(message.utf8Data);
+
+                // If this is a final message, start generating PDF
+                if (request.done) {
+                    config.html = pages;
+
+                    const fileStream = await me.exportRequestHandler(config, connectionId, connection);
+
+                    if (connection.connected) {
+                        clearTimeout(timer);
+
+                        connection.sendUTF(JSON.stringify({
+                            success : true,
+                            url     : me.setFile('http://localhost:8080/', config, fileStream)
+                        }));
+                    }
+                }
+                else {
+                    pages.push(request.html);
+
+                    delete request.html;
+
+                    Object.assign(config, request);
+                }
+            }
+        });
+
+        connection.on('close', function (reasonCode, description) {
+            me.logger.log('info', `[WebSocket@${connectionId}] Connection closed`);
+            me.logger.log('verbose', `[WebSocket@${connectionId}] reason: ${reasonCode} - ${description}`);
+        });
     }
 
     //Create http server instance

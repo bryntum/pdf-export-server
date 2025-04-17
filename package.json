@@ -59,6 +59,7 @@
     "rimraf": "~2.6.2",
     "serve-static": "^1.16.2",
     "url": "~0.11.0",
+    "websocket": "~1.0.35",
     "winston": "~3.2.1",
     "winston-daily-rotate-file": "~4.4.1",
     "ws": "~5.2.0"

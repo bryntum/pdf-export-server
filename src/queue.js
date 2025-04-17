@@ -1,11 +1,10 @@
 const fs = require('fs');
 const { EventEmitter } = require('events');
 const puppeteer = require('puppeteer');
-const generate = require('nanoid/generate');
 const { RequestCancelError } = require('./exception.js');
+const { getId } = require('./utils/helpers.js');
 
 const
-    alphabet         = '0123456789abcdefghijklmnopqrstuvwxyz',
     // Also defined in commands.js
     MAX_WORKERS      = 5,
     // Max amount of fails allowed before rejecting request
@@ -14,10 +13,6 @@ const
     FAIL_PROBABILITY = 0.4,
     // Timeout in ms before destroying the worker
     IDLE_TIMEOUT     = 2000;
-
-function getId() {
-    return generate(alphabet, 21);
-}
 
 // https://pptr.dev/#?product=Puppeteer&version=v2.0.0&show=api-pagepdfoptions
 const paperFormat = {

@@ -98,10 +98,10 @@ module.exports = class ExportServer {
      *
      * @param requestData
      * @param requestId UUID of the request
-     * @param [request] request instance
+     * @param [emitter] Event emitter. Entity which monitors connection status to dequeue jobs
      * @returns {Promise<Stream>}
      */
-    async exportRequestHandler(requestData, requestId, request) {
+    async exportRequestHandler(requestData, requestId, emitter) {
         const
             { html, orientation, format, fileFormat, clientURL } = requestData,
             landscape                                            = orientation === 'landscape';
@@ -132,11 +132,11 @@ module.exports = class ExportServer {
 
             const onClose = () => me.taskQueue.dequeue(requestId);
 
-            request?.socket.on('close', onClose);
+            emitter.on('close', onClose);
 
             const files = await this.taskQueue.queue({ requestId, items : html.map(i => i.html), config });
 
-            request?.socket.off('close', onClose);
+            emitter.off('close', onClose);
 
             //All buffers are stored in the files object, we need to concatenate them
             if (files.length) {
