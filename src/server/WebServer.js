@@ -8,6 +8,7 @@ const { server : WebSocketServer, connection : WebSocketConnection } = require('
 const fs = require('fs');
 const path = require('path');
 const serveStatic = require('serve-static');
+const { buffer } = require('node:stream/consumers');
 const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
 const { getId } = require('../utils/helpers.js');
@@ -249,10 +250,16 @@ module.exports = class WebServer extends ExportServer {
                     if (connection.connected) {
                         clearTimeout(timer);
 
-                        connection.sendUTF(JSON.stringify({
-                            success : true,
-                            url     : me.setFile('http://localhost:8080/', config, fileStream)
-                        }));
+                        if (request.sendAsBinary) {
+                            const buf = await buffer(fileStream);
+                            connection.sendBytes(buf);
+                        }
+                        else {
+                            connection.sendUTF(JSON.stringify({
+                                success : true,
+                                url     : me.setFile('http://localhost:8080/', config, fileStream)
+                            }));
+                        }
                     }
                 }
                 else {
