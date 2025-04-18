@@ -83,7 +83,7 @@ module.exports = class WebServer extends ExportServer {
                 me.wsServer = new WebSocketServer({
                     httpServer : me.httpServer,
                     maxReceivedFrameSize : 0x1000000,
-                    maxReceivedMessageSize : 0x5000000,
+                    maxReceivedMessageSize : 0x5000000
                 });
 
                 me.wsServer.on('request', me.handleExportWebSocketRequest.bind(me));
@@ -91,7 +91,7 @@ module.exports = class WebServer extends ExportServer {
             }
         }
 
-        if (0 && options.https) {
+        if (options.https) {
             me.httpsPort = options.https;
             //Create https server and pass certificate folder
             me.httpsServer = me.createHttpsServer(path.join(process.cwd(), 'cert'));
@@ -101,7 +101,7 @@ module.exports = class WebServer extends ExportServer {
                 me.wssServer = new WebSocketServer({
                     httpServer : me.httpsServer,
                     maxReceivedFrameSize : 0x1000000,
-                    maxReceivedMessageSize : 0x5000000,
+                    maxReceivedMessageSize : 0x5000000
                 });
 
                 me.wssServer.on('request', me.handleExportWebSocketRequest.bind(me));
