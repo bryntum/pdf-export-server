@@ -124,7 +124,7 @@ function getTmpFilePath(fileFormat) {
 
     const fileName = `${formattedDate}.${fileFormat}`;
 
-    return path.join(__dirname, '..', 'tmp', fileName);
+    return path.join(process.cwd(), 'tmp', fileName);
 }
 
 async function assertImage(pathToBase, buffer) {
@@ -202,7 +202,7 @@ async function assertImage(pathToBase, buffer) {
 }
 
 function checkServerKey() {
-    return fs.existsSync(path.join(__dirname, '..', 'cert', 'server.key'));
+    return fs.existsSync(path.join(process.cwd(), 'cert', 'server.key'));
 }
 
 function getLoggerConfig(filename) {

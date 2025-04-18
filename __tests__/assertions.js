@@ -61,10 +61,10 @@ async function assertExportedFile({ protocol, host, port, fileFormat }) {
     let result = false;
 
     if (fileFormat === 'png') {
-        result = await assertImage(path.join(__dirname, 'samples', 'smoke', 'base_https.png'), exportedFile);
+        result = await assertImage(path.join(process.cwd(), '__tests__', 'samples', 'smoke', 'base_https.png'), exportedFile);
     }
     else {
-        let baseSize = fs.statSync(path.join(__dirname, 'samples', 'smoke', `base_https.pdf`)).size;
+        let baseSize = fs.statSync(path.join(process.cwd(), '__tests__', 'samples', 'smoke', `base_https.pdf`)).size;
 
         const gotSize = Math.abs(baseSize -  exportedFile.length);
         const expectedSize = baseSize * 0.05;
