@@ -132,11 +132,11 @@ module.exports = class ExportServer {
 
             const onClose = () => me.taskQueue.dequeue(requestId);
 
-            emitter.on('close', onClose);
+            emitter?.on('close', onClose);
 
             const files = await this.taskQueue.queue({ requestId, items : html.map(i => i.html), config });
 
-            emitter.off('close', onClose);
+            emitter?.off('close', onClose);
 
             //All buffers are stored in the files object, we need to concatenate them
             if (files.length) {
