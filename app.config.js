@@ -5,6 +5,8 @@ const config = {
     // HTTPS server port
     "https"         : null,
 
+    "websocket"     : true,
+
     // CORS headers are always set, this config defined value for Access-Control-Allow-Origin header
     "cors"          : "*",
 

@@ -2,6 +2,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+const mkdirp = require('mkdirp');
 const WebServer = require('../src/server/WebServer.js');
 const appConfig = require('../app.config.js').config;
 
@@ -101,30 +102,13 @@ async function stopServer(server) {
 }
 
 function getTmpFilePath(fileFormat) {
-    function pad(value) {
-        return String(value).padStart(2, '0');
-    }
+    const tmpDir = path.join(process.cwd(), 'tmp');
 
-    const now = new Date();
+    mkdirp.sync(tmpDir);
 
-    // cannot use \ / : * " < > | on windows
-    const formattedDate = [
-        now.getFullYear(),
-        '-',
-        pad(now.getMonth() + 1),
-        '-',
-        pad(now.getDate()),
-        '__',
-        pad(now.getHours()),
-        '-',
-        pad(now.getMinutes()),
-        '-',
-        pad(now.getSeconds())
-    ].join('');
+    const date = new Date().toISOString().replace(/[T:]/g, '_').split('.')[0];
 
-    const fileName = `${formattedDate}.${fileFormat}`;
-
-    return path.join(__dirname, '..', 'tmp', fileName);
+    return path.join(tmpDir, `${date}.${fileFormat}`);
 }
 
 async function assertImage(pathToBase, buffer) {
@@ -202,7 +186,7 @@ async function assertImage(pathToBase, buffer) {
 }
 
 function checkServerKey() {
-    return fs.existsSync(path.join(__dirname, '..', 'cert', 'server.key'));
+    return fs.existsSync(path.join(process.cwd(), 'cert', 'server.key'));
 }
 
 function getLoggerConfig(filename) {
