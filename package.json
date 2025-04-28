@@ -74,5 +74,8 @@
     "setupFiles": [
       "<rootDir>/__tests__/jest.setup.js"
     ]
+  },
+  "pkg": {
+    "assets": ["node_modules/hummus/binding/*"]
   }
 }
