@@ -119,8 +119,8 @@ module.exports = class ExportServer {
 
             // dimensions can be set in format 12in*14in. This has precedence over A4, Letter etc
             if (dimension.length === 2) {
-                config.width = dimension[0];
-                config.height = dimension[1];
+                config.width = /in/.test(dimension[0]) ? dimension[0] : parseInt(dimension[0], 10);
+                config.height = /in/.test(dimension[1]) ? dimension[1] : parseInt(dimension[1], 10);
                 config.pageRanges = '1-1';
             }
             else {
