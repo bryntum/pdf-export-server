@@ -1,14 +1,13 @@
 .idea
 
+dist
+dist/
 cert
 cert/
 log
 log/
 tmp
 tmp/
-bin/linux
-bin/win
-bin/mac
 node_modules/
 !log/config.json
 !.gitkeep
