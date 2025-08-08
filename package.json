@@ -29,7 +29,8 @@
   "scripts": {
     "start": "node ./src/server.js",
     "test": "jest",
-    "measure": "node ./src/utils/measure-export-time.js"
+    "measure": "node ./src/utils/measure-export-time.js",
+    "build": "node ./build.js"
   },
   "dependencies": {
     "@types/express": "^5.0.0",
