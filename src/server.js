@@ -10,10 +10,7 @@ const isPkg = typeof process.pkg !== 'undefined';
 //Local copies of chromium is delivered next to the executable, we need to correct path to the local copy instead of reference to node_modules
 
 const chromiumExecutablePath = (isPkg
-    ? puppeteer.executablePath().replace(
-        /^.*?[/\\]node_modules[/\\]puppeteer[/\\]\.local-chromium/,
-        path.join(path.dirname(process.execPath), 'chromium')
-    )
+    ? path.join(process.execPath, '..', 'CHROME_EXECUTABLE_PATH_PLACEHOLDER')
     : puppeteer.executablePath()
 );
 

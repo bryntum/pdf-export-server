@@ -1,7 +1,7 @@
 const express = require('express');
 const addRequestId = require('express-request-id')();
 const bodyParser = require('body-parser');
-const nanoid = require('nanoid');
+const { nanoid } = require('nanoid');
 const http = require('http');
 const https = require('https');
 const { server : WebSocketServer, connection : WebSocketConnection } = require('websocket');
@@ -94,7 +94,7 @@ module.exports = class WebServer extends ExportServer {
         if (options.https) {
             me.httpsPort = options.https;
             //Create https server and pass certificate folder
-            me.httpsServer = me.createHttpsServer(path.join(process.cwd(), 'cert'));
+            me.httpsServer = me.createHttpsServer(path.join(process.execPath, '..', 'cert'));
             me.httpsServer.timeout = options.timeout;
 
             if (options.websocket) {

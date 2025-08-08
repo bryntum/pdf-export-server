@@ -1,7 +1,7 @@
-const generate = require('nanoid/generate');
+const { customAlphabet } = require('nanoid');
 
 const alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
 
 module.exports = {
-    getId : () => generate(alphabet, 21)
+    getId : () => customAlphabet(alphabet, 21)
 }
