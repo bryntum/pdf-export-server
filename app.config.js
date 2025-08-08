@@ -1,3 +1,9 @@
+const path = require('path');
+
+const logPath = process.pkg
+    ? path.join(process.execPath, '..', 'log')
+    : path.join(__dirname, 'log');
+
 const config = {
     // HTTP server port
     "http"          : 8080,
@@ -32,10 +38,10 @@ const config = {
     "timeout"       : 300,
 
     // Configuration options for logger
-    // Set to false to output log to the console
+    // Set `false` to output log to the console
     "logger"        : {
         "rotate"    : {
-            "dirname"     : "log",
+            "dirname"     : logPath,
             "filename"    : "export-server-%DATE%.log",
             "datePattern" : "YYYY-MM-DD",
             "maxSize"     : "20mb",

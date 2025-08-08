@@ -92,9 +92,13 @@ module.exports = class WebServer extends ExportServer {
         }
 
         if (options.https) {
+            const certPath = process.pkg
+                ? path.join(process.execPath, '..', 'cert')
+                : path.join(__dirname, '..', '..', 'cert');
+
             me.httpsPort = options.https;
             //Create https server and pass certificate folder
-            me.httpsServer = me.createHttpsServer(path.join(process.execPath, '..', 'cert'));
+            me.httpsServer = me.createHttpsServer(certPath);
             me.httpsServer.timeout = options.timeout;
 
             if (options.websocket) {
