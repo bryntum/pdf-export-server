@@ -3,10 +3,10 @@
 Export server can be run as a Docker container. See `Dockerfile` and `docker-compose.yml` in the server directory.
 
 ## Starting container
-To start Docker container run:
+To start Docker container run this in the export server root directory:
 
-```
-pdf-export-server$ docker-compose up -d --build
+```shell
+docker-compose up -d --build
 ```
 
 Docker container will expose ports 8080 and 8081 for HTTP and HTTPS connections respectively.

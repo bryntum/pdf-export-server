@@ -13,6 +13,7 @@ Live demos available here:
 - Uses headless chromium browser.
 - Runnable as NodeJS instance.
 - Docker container available at [Docker Hub](https://hub.docker.com/r/bryntum/pdf-export-server)
+- Can be assembled to a single executable file
 - Written in JavaScript and fully adaptable.
 - Can be used as standalone service or as an intermediary between your (C#, Java, PHP) frontend and backend.
 
@@ -28,8 +29,8 @@ Supported Node versions:
 
 1. Check out this repository
 ```shell
-~$ git clone git@github.com:bryntum/pdf-export-server.git
-~$ cd pdf-export-server 
+git clone git@github.com:bryntum/pdf-export-server.git
+cd pdf-export-server 
 ```
 2. Install packages
 ```shell
@@ -52,21 +53,50 @@ For your convenience we have pre-built container available on
 
 1. Pull it
 ```shell
-$ docker pull bryntum/pdf-export-server
+docker pull bryntum/pdf-export-server
 ```
 2. Create `docker-compose.yml` and configure image/port forwarding
 ```yaml
 version: "3.9"
 services:
   web:
-    image: "bryntum/pdf-export-server:1.0.1"
+    image: "bryntum/pdf-export-server:latest"
     ports:
       - "8080:8080"
 ```
 3. Start container
 ```shell
-$ docker compose -f docker-compose.yml up
+docker compose -f docker-compose.yml up
 ```
+
+You can also build image from source as described in the [Docker guide](docs/docker.md)
+
+## Building Executable
+
+To create a standalone executable file for the PDF Export Server, follow the detailed instructions provided in
+the [Building executable guide](docs/building.md). This process ensures that the server can run independently without
+needing a Node.js environment.
+
+### Steps to Build
+
+1. **Install Prerequisites**
+ - Ensure you have the required Node.js version (as mentioned in the [Getting Started](#using-nodejs) section).
+ - Make sure all dependencies are installed:
+   ```shell
+   npm i
+   ```
+
+2. **Run the Build Command**  
+   Execute the following command to create the executable:
+   ```shell
+   npm run build
+   ```
+
+3**Run the Executable**  
+   Once the executable is built, you can launch the server directly without any external dependencies:
+   ```shell
+   ./dist/pdf-export-server*
+   ```
 
 ## Links
 - [Architecture](docs/architecture.md)
