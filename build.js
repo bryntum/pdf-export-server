@@ -40,7 +40,9 @@ async function downloadChrome() {
   
   console.log(`Chrome downloaded to: ${installedBrowser.executablePath}`);
   
-  return installedBrowser.executablePath.replace(outputDir, '.');
+  const path = installedBrowser.executablePath.replace(outputDir, '.');
+
+  return path.replace(/\\/g, '\\\\');
 }
 
 // Copy certificates if they exist
