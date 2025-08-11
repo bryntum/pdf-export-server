@@ -92,7 +92,7 @@ needing a Node.js environment.
    npm run build
    ```
 
-3**Run the Executable**  
+3. **Run the Executable**  
    Once the executable is built, you can launch the server directly without any external dependencies:
    ```shell
    ./dist/pdf-export-server*

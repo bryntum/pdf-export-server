@@ -4,5 +4,5 @@ const alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
 const getId = customAlphabet(alphabet, 21);
 
 module.exports = {
-    getId : () => getId(21)
+    getId: getId
 }
