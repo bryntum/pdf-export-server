@@ -69,8 +69,8 @@ The `build.js` file orchestrates the build process by automating several tasks:
         - Including relevant assets and configuration files.
 
 3. **Output Generation**:
-    - The build script generates a final executable file (e.g., `pdf-export-server.exe` for Windows or a Linux binary),
-      which can be shared and executed without needing explicit Node.js runtime.
+    - The build script generates a final executable file (e.g., `pdf-export-server.exe` for Windows or a Linux/MacOS
+    - binary), which can be shared and executed without needing explicit Node.js runtime.
 
 ---
 
