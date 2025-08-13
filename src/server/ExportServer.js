@@ -154,7 +154,7 @@ module.exports = class ExportServer {
                 return result;
             }
             else {
-                throw new Error('Something went wrong: no files');
+                me.logger.log('error', 'No files found');
             }
         }
     }

@@ -85,8 +85,6 @@ async function startServer(config = {}) {
 
     console.log = log;
 
-    // console.log(JSON.stringify(config));
-
     return server;
 }
 
