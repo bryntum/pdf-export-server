@@ -2,7 +2,6 @@
 const { exec } = require('@yao-pkg/pkg');
 const path = require('path');
 const fs = require('fs');
-const { mkdirSync } = require('fs');
 const rimraf = require('rimraf');
 const copy = require('recursive-copy');
 const puppeteerBrowsers = require('@puppeteer/browsers');
@@ -25,7 +24,7 @@ async function prepareDirectories() {
     rimraf.sync(outputDir);
   }
 
-  mkdirSync(path.join(outputDir, 'log'), { recursive: true });
+  fs.mkdirSync(path.join(outputDir, 'log'), { recursive: true });
 }
 
 // Download Chromium for Puppeteer
@@ -76,7 +75,7 @@ async function copyCertificates() {
   
   if (fs.existsSync(certDir)) {
     console.log('Copying HTTPS certificates...');
-    mkdirSync(targetCertDir, { recursive: true });
+    fs.mkdirSync(targetCertDir, { recursive: true });
     
     await copy(certDir, targetCertDir)
       .catch(error => {
@@ -115,7 +114,8 @@ async function buildExecutable(entryFilePath) {
       break;
     default:
       console.log(`Unrecognized platform: ${targetPlatform}, defaulting to current platform`);
-      return buildExecutable(entryFilePath); // Fall back to current platform
+      outputName = `pdf-export-server-${platform}`;
+      pkgPlatform = platform;
   }
 
   const outputPath = path.join(outputDir, outputName);
@@ -198,4 +198,4 @@ async function build() {
 }
 
 // Run the build
-build();
+build().then(() => {});
