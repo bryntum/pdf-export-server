@@ -28,9 +28,9 @@ below detail each aspect of the process, including the tasks performed by the sc
 
 ## Building the Project
 
-To build the project, execute the `build.js` script
+To build the project, run:
    ```bash
-   node build.js
+   npm run build
    ```
 This will initiate the build process and generate executable with required assets, and put it all to the `/dist` folder.
 That folder has the following structure:
@@ -40,6 +40,16 @@ That folder has the following structure:
   - log    // Target directory to log server events
   - cert   // Optional directory to provide server with SSL certificates
   pdf-export-server* // executable
+```
+
+### Building for a target platform
+
+It is possible to build executable for a different target platform. By default, script will use current platform. To
+use a different platform you can run corresponding command:
+```shell
+npm run build:win
+npm run build:linux
+npm run build:macos
 ```
 
 ---

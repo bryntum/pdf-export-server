@@ -30,7 +30,10 @@
     "start": "node ./src/server.js",
     "test": "jest",
     "measure": "node ./src/utils/measure-export-time.js",
-    "build": "node ./build.js"
+    "build": "node ./build.js",
+    "build:win": "node ./build.js --platform=windows",
+    "build:linux": "node ./build.js --platform=linux",
+    "build:macos": "node ./build.js --platform=macos"
   },
   "dependencies": {
     "@types/express": "^5.0.0",

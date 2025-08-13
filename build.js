@@ -8,6 +8,13 @@ const copy = require('recursive-copy');
 const puppeteerBrowsers = require('@puppeteer/browsers');
 const { PUPPETEER_REVISIONS } = require('puppeteer-core/lib/cjs/puppeteer/revisions.js');
 
+// Parse command line arguments
+const args = process.argv.slice(2);
+const targetPlatformArg = args.find(arg => arg.startsWith('--platform='));
+const targetPlatform = targetPlatformArg
+    ? targetPlatformArg.split('=')[1]
+    : process.platform; // Default to current platform if not specified
+
 const outputDir = path.join(__dirname, 'dist');
 
 // Clean up and prepare directories
@@ -26,8 +33,25 @@ async function downloadChrome() {
   console.log('Downloading Chrome for Puppeteer...');
   
   const revision = PUPPETEER_REVISIONS.chrome;
-  const platform = puppeteerBrowsers.detectBrowserPlatform();
-  
+
+  // Use the target platform for Puppeteer browser detection or fallback to detected platform
+  let platform;
+
+  if (targetPlatform === 'win32' || targetPlatform === 'windows') {
+    platform = 'win64';
+  }
+  else if (targetPlatform === 'darwin' || targetPlatform === 'macos') {
+    platform = 'mac';
+  }
+  else if (targetPlatform === 'linux') {
+    platform = 'linux';
+  }
+  else {
+    // Default to auto-detection if platform not recognized
+    platform = puppeteerBrowsers.detectBrowserPlatform();
+  }
+
+
   console.log(`Downloading Chromium revision ${revision} for ${platform}...`);
   
   const installedBrowser = await puppeteerBrowsers.install({
@@ -69,28 +93,37 @@ async function buildExecutable(entryFilePath) {
   
   // Get platform-specific output name
   const platform = process.platform;
+
+  // Get platform-specific output name based on target platform
   let outputName;
-  
-  switch (platform) {
+  let pkgPlatform;
+
+  switch (targetPlatform) {
     case 'win32':
+    case 'windows':
       outputName = 'pdf-export-server-win.exe';
+      pkgPlatform = 'win';
       break;
     case 'darwin':
+    case 'macos':
       outputName = 'pdf-export-server-macos';
+      pkgPlatform = 'macos';
       break;
     case 'linux':
       outputName = 'pdf-export-server-linux';
+      pkgPlatform = 'linux';
       break;
     default:
-      outputName = 'pdf-export-server';
+      console.log(`Unrecognized platform: ${targetPlatform}, defaulting to current platform`);
+      return buildExecutable(entryFilePath); // Fall back to current platform
   }
-  
+
   const outputPath = path.join(outputDir, outputName);
   const nodeVersion = process.versions.node.split('.')[0];
-  
-  // Build with pkg
-  const targets = `node${nodeVersion}-${platform === 'win32' ? 'win' : platform === 'darwin' ? 'macos' : 'linux'}`;
-  
+
+  // Build with pkg using the specified platform
+  const targets = `node${nodeVersion}-${pkgPlatform}`;
+
   console.log(`Building for target: ${targets}`);
   
   await exec([
