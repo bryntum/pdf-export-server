@@ -1,7 +1,7 @@
 const express = require('express');
 const addRequestId = require('express-request-id')();
 const bodyParser = require('body-parser');
-const nanoid = require('nanoid');
+const { nanoid } = require('nanoid');
 const http = require('http');
 const https = require('https');
 const { server : WebSocketServer, connection : WebSocketConnection } = require('websocket');
@@ -12,10 +12,13 @@ const { buffer } = require('node:stream/consumers');
 const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
 const { getId } = require('../utils/helpers.js');
+const packageInfo = require('../../package.json');
 
 module.exports = class WebServer extends ExportServer {
     constructor(config) {
         super(config);
+
+        console.log(`[${packageInfo.name}@${packageInfo.version}] Starting server...`);
 
         this.files = {};
 
@@ -92,9 +95,13 @@ module.exports = class WebServer extends ExportServer {
         }
 
         if (options.https) {
+            const certPath = process.pkg
+                ? path.join(process.execPath, '..', 'cert')
+                : path.join(__dirname, '..', '..', 'cert');
+
             me.httpsPort = options.https;
             //Create https server and pass certificate folder
-            me.httpsServer = me.createHttpsServer(path.join(process.cwd(), 'cert'));
+            me.httpsServer = me.createHttpsServer(certPath);
             me.httpsServer.timeout = options.timeout;
 
             if (options.websocket) {
@@ -132,6 +139,7 @@ module.exports = class WebServer extends ExportServer {
 
         //You got ten seconds to fetch the file
         setTimeout(() => {
+            me.logger.log('verbose', `File ${fileKey} expired`);
             delete me.files[fileKey];
         }, 10000);
 
@@ -141,6 +149,7 @@ module.exports = class WebServer extends ExportServer {
     handleStatus(req, res) {
         res.status(200).jsonp({
             success : true,
+            version : packageInfo.version,
             websocket : this.wsServer != null || this.wssServer != null
         });
     }
@@ -245,7 +254,11 @@ module.exports = class WebServer extends ExportServer {
                 if (request.done) {
                     config.html = pages;
 
+                    me.logger.log('verbose', `[WebSocket@${connectionId}] Generating ${config.fileFormat.toUpperCase()}`);
+
                     const fileStream = await me.exportRequestHandler(config, connectionId, connection);
+
+                    me.logger.log('verbose', `[WebSocket@${connectionId}] ${config.fileFormat.toUpperCase()} generated`);
 
                     if (connection.connected) {
                         clearTimeout(timer);
@@ -253,6 +266,8 @@ module.exports = class WebServer extends ExportServer {
                         if (request.sendAsBinary) {
                             const buf = await buffer(fileStream);
                             connection.sendBytes(buf);
+
+                            me.logger.log('verbose', `[WebSocket@${connectionId}] sent ${buf.length} bytes`);
                         }
                         else {
                             connection.sendUTF(JSON.stringify({
@@ -260,6 +275,9 @@ module.exports = class WebServer extends ExportServer {
                                 url     : me.setFile('http://localhost:8080/', config, fileStream)
                             }));
                         }
+                    }
+                    else {
+                        me.logger.log('warn', `[WebSocket@${connectionId}] Connection closed before export finished`);
                     }
                 }
                 else {
@@ -335,6 +353,9 @@ module.exports = class WebServer extends ExportServer {
         return Promise.all([
             this.startHttpServer(),
             this.startHttpsServer()
-        ]);
+        ]).catch(e => {
+            console.error(e);
+            throw e;
+        });
     }
 };

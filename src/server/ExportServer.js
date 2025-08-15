@@ -1,7 +1,7 @@
 const muhammara = require('muhammara');
 const stream = require('stream');
 const memoryStreams = require('memory-streams');
-const mergeImg = require('merge-img');
+const { joinImages } = require('join-images');
 const { Queue } = require('../queue.js');
 const { getLogger } = require('../logger.js');
 
@@ -70,15 +70,11 @@ module.exports = class ExportServer {
      * @returns {Promise<module:stream.internal.PassThrough>}
      */
     async combinePngBuffers(pngs) {
-        return new Promise((resolve, reject) => {
-            mergeImg(pngs, { direction : true }).then(img => {
-                img.getBuffer('image/png', (s, buf) => {
-                    const result = new stream.PassThrough();
-                    result.end(buf);
-                    resolve(result);
-                });
-            }).catch(err => reject(err));
-        });
+        const imageObject = await joinImages(pngs, { direction: true });
+        const imageBuffer = await imageObject.toFormat('png').toBuffer();
+        const result = new stream.PassThrough();
+        result.end(imageBuffer);
+        return result;
     }
 
     /**
@@ -154,7 +150,7 @@ module.exports = class ExportServer {
                 return result;
             }
             else {
-                throw new Error('Something went wrong: no files');
+                me.logger.log('error', 'No files found');
             }
         }
     }
