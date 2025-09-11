@@ -229,7 +229,7 @@ module.exports = class WebServer extends ExportServer {
     handleExportWebSocketRequest(request) {
         const me = this;
         const connection = request.accept();
-        const origin = `${request.socket.server === me.httpServer ? 'http' : 'https'}://${request.host}/`
+        const origin = `${request.socket.server === me.httpServer ? 'http' : 'https'}://${request.host}/`;
         const { timeout } = (me.httpServer || me.httpsServer);
         const connectionId = getId();
 
@@ -273,7 +273,7 @@ module.exports = class WebServer extends ExportServer {
                         else {
                             connection.sendUTF(JSON.stringify({
                                 success : true,
-                                url     : me.setFile(origin, request, fileStream)
+                                url     : me.setFile(origin, config, fileStream)
                             }));
                         }
                     }
