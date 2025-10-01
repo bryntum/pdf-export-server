@@ -1,9 +1,9 @@
 # Based on https://developers.google.com/web/tools/puppeteer/troubleshooting#running_puppeteer_in_docker
 
-FROM node:20.18.1
+FROM node:24.9.0-bookworm-slim
 
 RUN apt-get update \
-    && apt-get install -y wget gnupg ca-certificates \
+    && apt-get install -y wget gnupg ca-certificates build-essential python3 make gcc g++ \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
     && apt-get update \
