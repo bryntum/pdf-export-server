@@ -1,6 +1,6 @@
 {
   "name": "@bryntum/pdf-export-server",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Standalone PDF export server",
   "keywords": [
     "bryntum",
@@ -65,6 +65,9 @@
     "move-file": "~1.0.0",
     "recursive-copy": "~2.0.9",
     "rimraf": "~2.6.2"
+  },
+  "overrides": {
+    "glob": "11.1.0"
   },
   "engines": {
     "node": ">=20"
