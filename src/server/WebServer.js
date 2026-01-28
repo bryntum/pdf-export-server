@@ -1,5 +1,5 @@
 const express = require('express');
-const addRequestId = require('express-request-id')();
+const addRequestId = require('express-request-id').default;
 const bodyParser = require('body-parser');
 const { nanoid } = require('nanoid');
 const http = require('http');
@@ -39,7 +39,7 @@ module.exports = class WebServer extends ExportServer {
             timeout : 5 * 60 * 1000 // 5 minutes
         }, options);
 
-        app.use(addRequestId);
+        app.use(addRequestId());
         app.use(bodyParser.json({ limit : options.maximum || '50mb' }));
         app.use(bodyParser.urlencoded({ extended : false, limit : options.maximum || '50mb' }));
 
@@ -56,10 +56,11 @@ module.exports = class WebServer extends ExportServer {
             });
         }
 
-        //Set target to load resources from
+        //Set a target to load resources from
         if (options.resources) {
-            // app.use('/resources', express.static(options.resources));
-            app.use('/resources', serveStatic(options.resources));
+            const resourcePath = path.join(process.cwd(), options.resources);
+            console.log(`Serving resources from ${resourcePath}`);
+            app.use('/resources', serveStatic(resourcePath));
         }
 
         app.get('/status', me.handleStatus.bind(me));

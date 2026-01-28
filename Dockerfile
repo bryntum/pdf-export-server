@@ -1,6 +1,6 @@
 # Based on https://developers.google.com/web/tools/puppeteer/troubleshooting#running_puppeteer_in_docker
 
-FROM node:24.9.0-bookworm-slim
+FROM node:25-slim
 
 RUN apt-get update \
     && apt-get install -y wget gnupg ca-certificates build-essential python3 make gcc g++ \
