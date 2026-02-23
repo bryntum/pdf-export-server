@@ -109,17 +109,4 @@ needing a Node.js environment.
 
 ## FAQ
 
-### Exported PDF/PNG doesn't look correct
-
-Most likely server couldn't get access to the resources. See [architecture](docs/architecture.md) guide for detailed
-information, [resources section](#CORS) for short summary and [troubleshooting](docs/troubleshooting.md) guide for
-debugging tips.
-
-### PDF/PNG file is not generated
-
-Most likely there is a problem on the server, see [troubleshooting](docs/troubleshooting.md) guide for help.
-
-### Cannot export using HTTPS
-
-You can see errors like `NET::ERR_CERT_AUTHORITY_INVALID` or CORS exception (in Firefox). See
- [Make browser to accept self-signed certificate](docs/building.md#self-signed-certificate) section for more info.
+Please refer to the [FAQ](docs/faq.md) for common questions and issues.
