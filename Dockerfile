@@ -7,7 +7,7 @@ RUN apt-get update \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list' \
     && apt-get update \
-    # Chrome installation is required to get system dependencies. Puppeteer will download required version on its own.
+    # Chrome installation is required to get system dependencies. Puppeteer will download required version on its own \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf --no-install-recommends \
 # https://techoverflow.net/2018/06/05/how-to-fix-puppetteer-error-while-loading-shared-libraries-libx11-xcb-so-1-cannot-open-shared-object-file-no-such-file-or-directory/ \
     gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgcc1 libgconf-2-4 \
@@ -46,6 +46,13 @@ COPY --chown=pptruser:pptruser ["app.config.js", "package.json", "/home/pptruser
 
 WORKDIR /home/pptruser
 
+# MuhammaraJS installs fixed dependency to tar 7.5.7 which fails security audit. Can be simplified to `npm i` after
+# this issue is fixed: https://github.com/julianhille/MuhammaraJS/issues/500
+# Run install to get muhammara
+RUN npm i
+# Install packages to muhammara submodule to get updated tar package
+RUN (cd node_modules/muhammara && rm -rf node_modules package-lock.json && npm i)
+# Run install again to update lock file
 RUN npm i
 
 EXPOSE 8080 8081
