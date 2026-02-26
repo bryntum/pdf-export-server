@@ -41,7 +41,19 @@ https.globalAgent.options.rejectUnauthorized = false;
 async function getFile(json, protocol, fileFormat, host, port, timeout) {
     json = json.replace(/{port}/g, String(port));
 
+    // Default timeout: 30 seconds for CI environments
+    const requestTimeout = timeout != null ? timeout : 30000;
+
     return new Promise((resolve, reject) => {
+        let settled = false;
+
+        const settle = (fn, value) => {
+            if (!settled) {
+                settled = true;
+                fn(value);
+            }
+        };
+
         const request = (protocol === 'http' ? http : https).request({
             hostname : host,
             port     : port,
@@ -50,7 +62,7 @@ async function getFile(json, protocol, fileFormat, host, port, timeout) {
                 'Content-Type'   : 'application/json',
                 'Content-Length' : Buffer.byteLength(json)
             },
-            timeout : timeout != null ? timeout : undefined
+            timeout : requestTimeout
         }, response => {
             const chunks = [];
             response.on('data', function(data) {
@@ -60,21 +72,25 @@ async function getFile(json, protocol, fileFormat, host, port, timeout) {
                 const result = Buffer.concat(chunks);
 
                 if (response.statusCode === 200) {
-                    resolve(result);
+                    settle(resolve, result);
                 }
                 else if (/application\/json/.test(response.headers['content-type'])) {
-                    reject(new Error(result.toString()));
+                    settle(reject, new Error(result.toString()));
                 }
                 else {
-                    reject('Request ended unexpectedly');
+                    settle(reject, new Error('Request ended unexpectedly'));
                 }
             });
         });
 
         request.on('timeout', () => {
             request.destroy();
+            settle(reject, new Error('timeout'));
+        });
 
-            reject(new Error('timeout'));
+        // Handle errors to prevent unhandled 'error' events after timeout/destroy
+        request.on('error', (error) => {
+            settle(reject, error);
         });
 
         request.write(json);

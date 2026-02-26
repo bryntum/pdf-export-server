@@ -2,13 +2,15 @@
  * E2E tests for WebSocket connectivity.
  * These tests verify that the WebSocket server correctly handles connections and export requests.
  */
+const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
-const { startServer, stopServer, getLoggerConfig, getPort, loadTestHTML } = require('../utils.js');
+const { startServer, stopServer, getLoggerConfig, getPort } = require('../utils.js');
 
 jest.setTimeout(60 * 1000);
 
-const testPageHTML = loadTestHTML(path.join(__dirname, '../samples/smoke/base.html'));
+// E2E tests use {port} placeholder - replaced with actual server port when sending request
+const testPageHTML = fs.readFileSync(path.join(__dirname, '../samples/smoke/base.html'), 'utf-8');
 
 let server;
 
@@ -103,12 +105,16 @@ describe('E2E WebSocket', () => {
 
         const ws = await createWebSocketConnection(server.httpPort);
 
+        // Replace {port} with actual server port for resource loading
+        const htmlWithPort = testPageHTML.replace(/{port}/g, server.httpPort);
+
         const exportMessage = {
             fileFormat  : 'pdf',
             fileName    : 'test',
             format      : 'A4',
             orientation : 'portrait',
-            html        : [{ html : testPageHTML }]
+            clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
+            html        : [{ html : htmlWithPort }]
         };
 
         const doneMessage = {
@@ -139,12 +145,16 @@ describe('E2E WebSocket', () => {
 
         const ws = await createWebSocketConnection(server.httpPort);
 
+        // Replace {port} with actual server port for resource loading
+        const htmlWithPort = testPageHTML.replace(/{port}/g, server.httpPort);
+
         const exportMessage = {
             fileFormat  : 'pdf',
             fileName    : 'test',
             format      : 'A4',
             orientation : 'portrait',
-            html        : [{ html : testPageHTML }]
+            clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
+            html        : [{ html : htmlWithPort }]
         };
 
         const doneMessage = {
