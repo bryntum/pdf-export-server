@@ -1,4 +1,4 @@
-const { startServer, stopServer, certExists, getLoggerConfig } = require('./utils.js');
+const { startServer, stopServer, certExists, getLoggerConfig, getPort } = require('./utils.js');
 const { assertExportedFile, waitForWithTimeout } = require('./assertions.js');
 
 jest.setTimeout(3 * 60 * 1000);
@@ -15,7 +15,7 @@ describe('Should export over HTTP', () => {
     test('Should export to PDF', async () => {
         const
             protocol = 'http',
-            port     = 8081,
+            port     = getPort(),
             workers  = 1;
 
         server = await startServer({ protocol, port, workers, logger : getLoggerConfig('smoke_http_pdf') })
@@ -32,7 +32,7 @@ describe('Should export over HTTP', () => {
         const
             host       = 'localhost',
             protocol   = 'http',
-            port       = 8082,
+            port       = getPort(),
             workers    = 1,
             fileFormat = 'pdf';
 
@@ -53,7 +53,7 @@ describe('Should export over HTTPS', () => {
         test('Should export to PDF', async () => {
             const
                 protocol = 'https',
-                port     = 8083,
+                port     = getPort(),
                 workers  = 1;
 
             server = await startServer({ protocol, port, workers, logger : getLoggerConfig('smoke_https_pdf') })

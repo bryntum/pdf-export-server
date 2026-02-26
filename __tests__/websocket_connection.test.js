@@ -1,4 +1,4 @@
-const { startServer, stopServer, getLoggerConfig } = require('./utils.js');
+const { startServer, stopServer, getLoggerConfig, getPort } = require('./utils.js');
 const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
@@ -95,7 +95,7 @@ function sendAndReceive(ws, messages, expectBinary = true) {
 
 describe('WebSocket Connection Tests', () => {
     test('Should establish WebSocket connection', async () => {
-        const port = 8090;
+        const port = getPort();
 
         server = await startServer({
             protocol  : 'http',
@@ -114,7 +114,7 @@ describe('WebSocket Connection Tests', () => {
     });
 
     test('Should receive binary PDF data when sendAsBinary is true', async () => {
-        const port = 8091;
+        const port = getPort();
 
         server = await startServer({
             protocol  : 'http',
@@ -150,7 +150,7 @@ describe('WebSocket Connection Tests', () => {
     });
 
     test('Should receive URL when sendAsBinary is false', async () => {
-        const port = 8092;
+        const port = getPort();
 
         server = await startServer({
             protocol  : 'http',
@@ -185,7 +185,7 @@ describe('WebSocket Connection Tests', () => {
     });
 
     test('Should handle multiple HTML pages sent sequentially', async () => {
-        const port = 8093;
+        const port = getPort();
 
         server = await startServer({
             protocol  : 'http',
@@ -235,7 +235,7 @@ describe('WebSocket Connection Tests', () => {
     });
 
     test('Should handle connection close gracefully', async () => {
-        const port = 8094;
+        const port = getPort();
 
         server = await startServer({
             protocol  : 'http',

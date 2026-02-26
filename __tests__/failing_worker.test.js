@@ -1,4 +1,4 @@
-const { startServer, stopServer, getLoggerConfig } = require('./utils.js');
+const { startServer, stopServer, getLoggerConfig, getPort } = require('./utils.js');
 const { assertExportedFile } = require('./assertions.js');
 
 jest.setTimeout(5 * 60 * 1000);
@@ -16,7 +16,7 @@ describe('Should export content with randomly failing workers', () => {
         const
             host     = 'localhost',
             protocol = 'http',
-            port     = 8081,
+            port     = getPort(),
             workers  = 4;
 
         server = await startServer({ protocol, port, workers, testing : true, logger : getLoggerConfig('failing_workers') });

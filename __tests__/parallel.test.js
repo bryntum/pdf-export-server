@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { getTmpFilePath, startServer, stopServer, getLoggerConfig } = require('./utils.js');
+const { getTmpFilePath, startServer, stopServer, getLoggerConfig, getPort } = require('./utils.js');
 const { getFile, waitForWithTimeout } = require('./assertions.js');
 
 // We export 100 pages, takes time
@@ -37,7 +37,7 @@ describe('Should export over HTTP', () => {
         const
             host       = 'localhost',
             protocol   = 'http',
-            port       = 8081,
+            port       = getPort(),
             workers    = 4,
             fileFormat = 'pdf';
 
@@ -76,7 +76,7 @@ describe('Parallel export requests received in very specific moments should work
     test('Should export to pdf', async () => {
         const
             protocol = 'http',
-            port     = 8081,
+            port     = getPort(),
             workers  = 2;
 
         const requestPayload = {

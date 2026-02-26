@@ -6,46 +6,56 @@ const mkdirp = require('mkdirp');
 const WebServer = require('../src/server/WebServer.js');
 const appConfig = require('../app.config.js').config;
 
-const net = require("net");
-const Socket = net.Socket;
+/**
+ * Port allocator that uses JEST_WORKER_ID to assign non-conflicting port ranges.
+ * Each Jest worker gets a range of 100 ports, ensuring parallel tests don't conflict.
+ *
+ * Worker 1: ports 8100-8199
+ * Worker 2: ports 8200-8299
+ * etc.
+ */
+class PortAllocator {
+    constructor() {
+        // JEST_WORKER_ID is 1-based, defaults to 1 if not running in Jest
+        const workerId = parseInt(process.env.JEST_WORKER_ID, 10) || 1;
+        this.basePort = 8000 + (workerId * 100);
+        this.currentOffset = 0;
+    }
 
-// https://stackoverflow.com/a/66116887
-async function getNextPort(port = 8080, maxPort = 10000) {
-    return new Promise((resolve, reject) => {
-        let socket;
+    /**
+     * Get the next available port for this worker
+     * @returns {number}
+     */
+    getPort() {
+        const port = this.basePort + this.currentOffset;
+        this.currentOffset++;
+        return port;
+    }
 
-        const getSocket = () => {
-            socket?.destroy();
+    /**
+     * Reset the port counter (useful for test cleanup)
+     */
+    reset() {
+        this.currentOffset = 0;
+    }
+}
 
-            socket = new Socket();
+// Singleton instance for the current Jest worker
+const portAllocator = new PortAllocator();
 
-            socket.on('connect', () => {
-                checkPort(++port);
-            });
+/**
+ * Get a unique port for this test worker
+ * @returns {number}
+ */
+function getPort() {
+    return portAllocator.getPort();
+}
 
-            socket.on('error', e => {
-                if (e.code !== "ECONNREFUSED") {
-                    reject(e);
-                } else {
-                    resolve(port);
-                }
-            });
-
-            return socket;
-        }
-
-        const checkPort = port => {
-            if (port < maxPort) {
-                socket = getSocket();
-                socket.connect(port, '0.0.0.0');
-            }
-            else {
-                reject('Could not find available port');
-            }
-        }
-
-        checkPort(port);
-    });
+/**
+ * Reset port allocator (call in beforeAll/afterAll if needed)
+ */
+function resetPorts() {
+    portAllocator.reset();
 }
 
 
@@ -202,7 +212,8 @@ function getLoggerConfig(filename) {
 }
 
 module.exports = {
-    getNextPort,
+    getPort,
+    resetPorts,
     startServer,
     stopServer,
     getTmpFilePath,
