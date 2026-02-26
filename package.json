@@ -60,6 +60,7 @@
     "ws": "~8.19.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.29.0",
     "@yao-pkg/pkg": "~6.6.0",
     "move-file": "~1.0.0",
     "recursive-copy": "^2.0.14",
@@ -80,6 +81,9 @@
     ],
     "setupFiles": [
       "<rootDir>/__tests__/jest.setup.js"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(express-request-id|nanoid|command-line-args|command-line-usage)/)"
     ]
   },
   "pkg": {
