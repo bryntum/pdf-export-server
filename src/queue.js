@@ -174,7 +174,10 @@ class Queue extends Loggable {
         // This is a factory method, returning instance of the browser. It is passed to worker class constructor, so
         // it cannot refer to the instance.
         me.startPuppeteer = async function(scope) {
-            const browser = await puppeteer.launch({ ignoreHTTPSErrors : true, executablePath : chromiumExecutablePath, args : chromiumArgs });
+            const browser = await puppeteer.launch({
+                executablePath : chromiumExecutablePath,
+                args           : chromiumArgs
+            });
 
             scope.verbose('Browser started');
 

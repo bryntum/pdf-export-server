@@ -25,6 +25,9 @@ const config = {
     // True to pass `--no-sandbox` flag to the chromium
     "no-sandbox"    : true,
 
+    // True to disable web security (CORS, CSP, etc)
+    "disable-web-security" : false,
+
     // Maximum amount of parallel puppeteer instances to run
     "max-workers"   : 5,
 

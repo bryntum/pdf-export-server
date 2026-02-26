@@ -76,7 +76,13 @@ async function startServer(config = {}) {
         [protocol]       : port,
         'max-workers'    : workers,
         findNextHttpPort : true,
-        chromiumArgs     : ['--no-sandbox']
+        chromiumArgs     : [
+            '--disable-web-security',
+            '--user-data-dir=/tmp/chrome', // A user data directory is often required
+            // Other necessary flags for certain environments (e.g., Docker, Linux)
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
     }, config);
 
     const server = new WebServer(config);

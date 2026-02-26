@@ -2,14 +2,40 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
-const testDataPDF = require('./samples/smoke/base_https.pdf.json');
-const testDataPNG = require('./samples/smoke/base_https.png.json');
 const { getTmpFilePath, assertImage } = require('./utils.js');
+
+const testPageHTML = fs.readFileSync(path.join(__dirname, 'samples/smoke/base.html'), 'utf-8');
+const commonTestData = {
+    orientation  : 'portrait',
+    // This is calculated canvas size for the HTML being rendered
+    format       : '1120*2389',
+    fileName     : 'base_https',
+    sendAsBinary : true
+}
+const testDataPDF = {
+    ...commonTestData,
+    html       : [{ html : testPageHTML }],
+    fileFormat : 'pdf'
+}
+const testDataPNG = {
+    ...commonTestData,
+    html       : [{ html : testPageHTML }],
+    fileFormat : 'pdf'
+}
 
 // https://github.com/request/request/issues/418#issuecomment-274105600
 // Allow self-signed certificates
 https.globalAgent.options.rejectUnauthorized = false;
 
+/**
+ * @param {Object} json
+ * @param {'http'|'https'} protocol
+ * @param {'pdf'|'png'} fileFormat
+ * @param {String} host
+ * @param {Number} port
+ * @param {Number} timeout
+ * @returns {Promise<Buffer>}
+ */
 async function getFile(json, protocol, fileFormat, host, port, timeout) {
     return new Promise((resolve, reject) => {
         const request = (protocol === 'http' ? http : https).request({
@@ -30,7 +56,6 @@ async function getFile(json, protocol, fileFormat, host, port, timeout) {
                 const result = Buffer.concat(chunks);
 
                 if (response.statusCode === 200) {
-                    // fs.writeFileSync(path.join(__dirname, `test.${fileFormat}`), result);
                     resolve(result);
                 }
                 else if (/application\/json/.test(response.headers['content-type'])) {
