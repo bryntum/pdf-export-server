@@ -77,6 +77,8 @@
     "setupFiles": [
       "<rootDir>/__tests__/jest.setup.js"
     ],
+    "globalSetup": "<rootDir>/__tests__/globalSetup.js",
+    "globalTeardown": "<rootDir>/__tests__/globalTeardown.js",
     "transformIgnorePatterns": [
       "node_modules/(?!(express-request-id|nanoid|command-line-args|command-line-usage)/)"
     ]

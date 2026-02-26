@@ -4,7 +4,9 @@ const fs = require('fs');
 const os = require('os');
 const mkdirp = require('mkdirp');
 const WebServer = require('../src/server/WebServer.js');
+const ExportServer = require('../src/server/ExportServer.js');
 const appConfig = require('../app.config.js').config;
+const { RESOURCES_PORT } = require('./staticServer.js');
 
 /**
  * Port allocator that uses JEST_WORKER_ID to assign non-conflicting port ranges.
@@ -211,13 +213,76 @@ function getLoggerConfig(filename) {
     return { file : { level : 'verbose', filename : `log/tests/${filename}.txt` } };
 }
 
+/**
+ * Create an ExportServer instance without HTTP server for direct queue testing.
+ * This is faster than starting a full WebServer.
+ *
+ * @param {Object} config
+ * @param {number} [config.workers=1] - Number of workers
+ * @param {boolean} [config.testing=false] - Enable testing mode (random failures)
+ * @param {Object} [config.logger] - Logger config
+ * @returns {ExportServer}
+ */
+function createExportServer(config = {}) {
+    const { workers = 1, testing = false, logger } = config;
+
+    return new ExportServer({
+        'max-workers' : workers,
+        testing,
+        logger        : logger || appConfig.logger,
+        chromiumArgs  : [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
+    });
+}
+
+/**
+ * Stop an ExportServer by stopping its queue
+ * @param {ExportServer} exportServer
+ */
+function stopExportServer(exportServer) {
+    if (exportServer?.taskQueue) {
+        exportServer.taskQueue.stop();
+    }
+}
+
+/**
+ * Helper to convert stream to buffer
+ * @param {Stream} stream
+ * @returns {Promise<Buffer>}
+ */
+async function streamToBuffer(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', chunk => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+}
+
+/**
+ * Load HTML file and replace {port} placeholder with the static resources server port.
+ * @param {string} filePath - Path to the HTML file
+ * @returns {string} HTML content with port replaced
+ */
+function loadTestHTML(filePath) {
+    const html = fs.readFileSync(filePath, 'utf-8');
+    return html.replace(/\{port\}/g, RESOURCES_PORT);
+}
+
 module.exports = {
     getPort,
     resetPorts,
     startServer,
     stopServer,
+    createExportServer,
+    stopExportServer,
+    streamToBuffer,
+    loadTestHTML,
     getTmpFilePath,
     assertImage,
     getLoggerConfig,
-    certExists : checkServerKey()
+    certExists : checkServerKey(),
+    RESOURCES_PORT
 };
