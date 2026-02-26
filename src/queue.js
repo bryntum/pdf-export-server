@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { EventEmitter } = require('events');
 const puppeteer = require('puppeteer');
 const { RequestCancelError } = require('./exception.js');
@@ -121,13 +120,28 @@ class Queue extends Loggable {
         super();
         const me = this;
 
+        /**
+         * Max number of workers to run concurrently
+         * @type {Number}
+         */
         me.maxWorkers = Number(maxWorkers);
+
+        /**
+         * Flag to use tabs instead of browser instances
+         * @type {Boolean}
+         */
         me.useTabs = useTabs;
 
-        // Boolean flag to use quick loading (waitUntil load). Makes pages to export faster, fonts might be missing.
+        /**
+         * Flag to use quick loading (waitUntil load). Makes pages to export faster, fonts might be missing.
+         * @type {Boolean}
+         */
         me.quick = quick;
 
-        // Used to switch queue to testing mode
+        /**
+         * Used to switch queue to testing mode
+         * @type {Boolean}
+         */
         me.testing = testing;
 
         // List of html chunks to convert to pdf/png
@@ -156,6 +170,8 @@ class Queue extends Loggable {
             else {
                 me.info('All workers destroyed, queue is empty');
 
+                me.emit('empty');
+
                 if (me._browser) {
                     me.info('Stopping browser');
                     me._browser.close();
@@ -174,7 +190,10 @@ class Queue extends Loggable {
         // This is a factory method, returning instance of the browser. It is passed to worker class constructor, so
         // it cannot refer to the instance.
         me.startPuppeteer = async function(scope) {
-            const browser = await puppeteer.launch({ ignoreHTTPSErrors : true, executablePath : chromiumExecutablePath, args : chromiumArgs });
+            const browser = await puppeteer.launch({
+                executablePath : chromiumExecutablePath,
+                args           : chromiumArgs
+            });
 
             scope.verbose('Browser started');
 
@@ -313,6 +332,34 @@ class Queue extends Loggable {
 
     dequeue(requestId) {
         this.emit('jobcancel', requestId);
+    }
+
+    /**
+     * Stop the queue and destroy all workers, closing all browsers
+     */
+    stop() {
+        const me = this;
+
+        me.info('Stopping queue and destroying all workers');
+
+        // Clear pending jobs
+        me.jobs = [];
+
+        // Destroy all workers
+        for (const worker of me.workers.values) {
+            worker.destroy();
+        }
+
+        me.workers.values.clear();
+        me.availableWorkers.values.clear();
+
+        // Close shared browser if using tabs mode
+        if (me._browser) {
+            me._browser.close();
+            delete me._browser;
+        }
+
+        me._running = false;
     }
 
     start() {
@@ -491,6 +538,31 @@ class Worker extends Loggable {
         }, me.defaultIdleTimeout);
     }
 
+    /**
+     * Force destroy the worker, closing browser immediately
+     */
+    destroy() {
+        const me = this;
+
+        if (me.idleTimeout != null) {
+            clearTimeout(me.idleTimeout);
+            me.idleTimeout = null;
+        }
+
+        if (me.browserDetacher) {
+            me.verbose('Force closing browser');
+            me.browserDetacher();
+            me.browser = null;
+            me.browserDetacher = null;
+        }
+        // Also close browser directly if detacher wasn't set (race condition during browser start)
+        else if (me.browser) {
+            me.verbose('Force closing browser directly');
+            me.browser.close().catch(() => {});
+            me.browser = null;
+        }
+    }
+
     // Hook to override after new browser page is opened
     async onPageCreated(page) {
         page.on('console', this.handleConsoleMessage.bind(this));
@@ -576,6 +648,14 @@ class Worker extends Loggable {
         }
         catch (e) {
             me.emit('error', e);
+
+            // Close browser to prevent ghost processes when worker fails after browser started
+            if (me.browserDetacher) {
+                me.verbose('Closing browser due to error');
+                me.browserDetacher();
+                me.browser = null;
+                me.browserDetacher = null;
+            }
 
             throw e;
         }

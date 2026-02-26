@@ -1,0 +1,36 @@
+.b-export-header,
+.b-export-footer {
+    display     : flex;
+    color       : #fff;
+    background  : #0076f8;
+    align-items : center;
+    z-index     : 10000;
+}
+
+.b-export-header {
+    text-align      : start;
+    height          : 40px;
+    position        : relative;
+    padding         : .7em 1em .5em 1em;
+
+    display         : flex;
+    flex-flow       : row nowrap;
+    justify-content : space-between;
+
+    img {
+        height : 60%;
+    }
+
+    dl {
+        margin    : 0;
+        font-size : 10px;
+    }
+
+    dd {
+        margin : 0;
+    }
+}
+
+.b-export-footer {
+    justify-content : center;
+}

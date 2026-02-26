@@ -4,48 +4,60 @@ const fs = require('fs');
 const os = require('os');
 const mkdirp = require('mkdirp');
 const WebServer = require('../src/server/WebServer.js');
+const ExportServer = require('../src/server/ExportServer.js');
 const appConfig = require('../app.config.js').config;
+const { RESOURCES_PORT } = require('./staticServer.js');
 
-const net = require("net");
-const Socket = net.Socket;
+/**
+ * Port allocator that uses JEST_WORKER_ID to assign non-conflicting port ranges.
+ * Each Jest worker gets a range of 100 ports, ensuring parallel tests don't conflict.
+ *
+ * Worker 1: ports 8100-8199
+ * Worker 2: ports 8200-8299
+ * etc.
+ */
+class PortAllocator {
+    constructor() {
+        // JEST_WORKER_ID is 1-based, defaults to 1 if not running in Jest
+        const workerId = parseInt(process.env.JEST_WORKER_ID, 10) || 1;
+        this.basePort = 8000 + (workerId * 100);
+        this.currentOffset = 0;
+    }
 
-// https://stackoverflow.com/a/66116887
-async function getNextPort(port = 8080, maxPort = 10000) {
-    return new Promise((resolve, reject) => {
-        let socket;
+    /**
+     * Get the next available port for this worker
+     * @returns {number}
+     */
+    getPort() {
+        const port = this.basePort + this.currentOffset;
+        this.currentOffset++;
+        return port;
+    }
 
-        const getSocket = () => {
-            socket?.destroy();
+    /**
+     * Reset the port counter (useful for test cleanup)
+     */
+    reset() {
+        this.currentOffset = 0;
+    }
+}
 
-            socket = new Socket();
+// Singleton instance for the current Jest worker
+const portAllocator = new PortAllocator();
 
-            socket.on('connect', () => {
-                checkPort(++port);
-            });
+/**
+ * Get a unique port for this test worker
+ * @returns {number}
+ */
+function getPort() {
+    return portAllocator.getPort();
+}
 
-            socket.on('error', e => {
-                if (e.code !== "ECONNREFUSED") {
-                    reject(e);
-                } else {
-                    resolve(port);
-                }
-            });
-
-            return socket;
-        }
-
-        const checkPort = port => {
-            if (port < maxPort) {
-                socket = getSocket();
-                socket.connect(port, '0.0.0.0');
-            }
-            else {
-                reject('Could not find available port');
-            }
-        }
-
-        checkPort(port);
-    });
+/**
+ * Reset port allocator (call in beforeAll/afterAll if needed)
+ */
+function resetPorts() {
+    portAllocator.reset();
 }
 
 
@@ -76,7 +88,12 @@ async function startServer(config = {}) {
         [protocol]       : port,
         'max-workers'    : workers,
         findNextHttpPort : true,
-        chromiumArgs     : ['--no-sandbox']
+        // Host resources locally to maintain stability
+        resources        : path.join('__tests__', 'samples', 'resources'),
+        chromiumArgs     : [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
     }, config);
 
     const server = new WebServer(config);
@@ -89,6 +106,11 @@ async function startServer(config = {}) {
 }
 
 async function stopServer(server) {
+    // Stop the queue and close all browser instances first
+    if (server.taskQueue) {
+        server.taskQueue.stop();
+    }
+
     await new Promise(resolve => {
         if (server.httpServer) {
             server.httpServer.close(resolve);
@@ -191,12 +213,76 @@ function getLoggerConfig(filename) {
     return { file : { level : 'verbose', filename : `log/tests/${filename}.txt` } };
 }
 
+/**
+ * Create an ExportServer instance without HTTP server for direct queue testing.
+ * This is faster than starting a full WebServer.
+ *
+ * @param {Object} config
+ * @param {number} [config.workers=1] - Number of workers
+ * @param {boolean} [config.testing=false] - Enable testing mode (random failures)
+ * @param {Object} [config.logger] - Logger config
+ * @returns {ExportServer}
+ */
+function createExportServer(config = {}) {
+    const { workers = 1, testing = false, logger } = config;
+
+    return new ExportServer({
+        'max-workers' : workers,
+        testing,
+        logger        : logger || appConfig.logger,
+        chromiumArgs  : [
+            '--no-sandbox',
+            '--disable-setuid-sandbox'
+        ]
+    });
+}
+
+/**
+ * Stop an ExportServer by stopping its queue
+ * @param {ExportServer} exportServer
+ */
+function stopExportServer(exportServer) {
+    if (exportServer?.taskQueue) {
+        exportServer.taskQueue.stop();
+    }
+}
+
+/**
+ * Helper to convert stream to buffer
+ * @param {Stream} stream
+ * @returns {Promise<Buffer>}
+ */
+async function streamToBuffer(stream) {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', chunk => chunks.push(chunk));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+        stream.on('error', reject);
+    });
+}
+
+/**
+ * Load HTML file and replace {port} placeholder with the static resources server port.
+ * @param {string} filePath - Path to the HTML file
+ * @returns {string} HTML content with port replaced
+ */
+function loadTestHTML(filePath) {
+    const html = fs.readFileSync(filePath, 'utf-8');
+    return html.replace(/\{port\}/g, RESOURCES_PORT);
+}
+
 module.exports = {
-    getNextPort,
+    getPort,
+    resetPorts,
     startServer,
     stopServer,
+    createExportServer,
+    stopExportServer,
+    streamToBuffer,
+    loadTestHTML,
     getTmpFilePath,
     assertImage,
     getLoggerConfig,
-    certExists : checkServerKey()
+    certExists : checkServerKey(),
+    RESOURCES_PORT
 };
