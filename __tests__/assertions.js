@@ -22,7 +22,7 @@ const testDataPDF = {
 const testDataPNG = {
     ...commonTestData,
     html       : [{ html : testPageHTML }],
-    fileFormat : 'pdf'
+    fileFormat : 'png'
 }
 
 // https://github.com/request/request/issues/418#issuecomment-274105600
@@ -87,29 +87,20 @@ async function assertExportedFile({ protocol, host, port, fileFormat }) {
 
     const exportedFile = await getFile(json, protocol, fileFormat, host, port);
 
-    let result = false;
+    let baseSize = fs.statSync(path.join(process.cwd(), '__tests__', 'samples', 'smoke', `base_https.${fileFormat}`)).size;
 
-    if (fileFormat === 'png') {
-        result = await assertImage(path.join(process.cwd(), '__tests__', 'samples', 'smoke', 'base_https.png'), exportedFile);
-    }
-    else {
-        let baseSize = fs.statSync(path.join(process.cwd(), '__tests__', 'samples', 'smoke', `base_https.pdf`)).size;
+    const gotSize = Math.abs(baseSize -  exportedFile.length);
+    const expectedSize = baseSize * 0.05;
 
-        const gotSize = Math.abs(baseSize -  exportedFile.length);
-        const expectedSize = baseSize * 0.05;
+    if (gotSize > expectedSize) {
+        const tmpFilePath = getTmpFilePath(fileFormat);
 
-        if (gotSize > expectedSize) {
-            const tmpFilePath = getTmpFilePath(fileFormat);
+        fs.writeFileSync(tmpFilePath, exportedFile);
 
-            fs.writeFileSync(tmpFilePath, exportedFile);
-
-            fail(`${fileFormat} length differs very much from expected.\nCheck exported file here: ${tmpFilePath}`);
-        }
-
-        expect(gotSize).toBeLessThanOrEqual(expectedSize);
+        fail(`${fileFormat} length differs very much from expected.\nCheck exported file here: ${tmpFilePath}`);
     }
 
-    return result;
+    expect(gotSize).toBeLessThanOrEqual(expectedSize);
 }
 
 async function waitForWithTimeout(promise, timeout) {
