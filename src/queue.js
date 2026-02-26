@@ -334,6 +334,34 @@ class Queue extends Loggable {
         this.emit('jobcancel', requestId);
     }
 
+    /**
+     * Stop the queue and destroy all workers, closing all browsers
+     */
+    stop() {
+        const me = this;
+
+        me.info('Stopping queue and destroying all workers');
+
+        // Clear pending jobs
+        me.jobs = [];
+
+        // Destroy all workers
+        for (const worker of me.workers.values) {
+            worker.destroy();
+        }
+
+        me.workers.values.clear();
+        me.availableWorkers.values.clear();
+
+        // Close shared browser if using tabs mode
+        if (me._browser) {
+            me._browser.close();
+            delete me._browser;
+        }
+
+        me._running = false;
+    }
+
     start() {
         this._activeRun = this.run();
 
@@ -510,6 +538,31 @@ class Worker extends Loggable {
         }, me.defaultIdleTimeout);
     }
 
+    /**
+     * Force destroy the worker, closing browser immediately
+     */
+    destroy() {
+        const me = this;
+
+        if (me.idleTimeout != null) {
+            clearTimeout(me.idleTimeout);
+            me.idleTimeout = null;
+        }
+
+        if (me.browserDetacher) {
+            me.verbose('Force closing browser');
+            me.browserDetacher();
+            me.browser = null;
+            me.browserDetacher = null;
+        }
+        // Also close browser directly if detacher wasn't set (race condition during browser start)
+        else if (me.browser) {
+            me.verbose('Force closing browser directly');
+            me.browser.close().catch(() => {});
+            me.browser = null;
+        }
+    }
+
     // Hook to override after new browser page is opened
     async onPageCreated(page) {
         page.on('console', this.handleConsoleMessage.bind(this));
@@ -595,6 +648,14 @@ class Worker extends Loggable {
         }
         catch (e) {
             me.emit('error', e);
+
+            // Close browser to prevent ghost processes when worker fails after browser started
+            if (me.browserDetacher) {
+                me.verbose('Closing browser due to error');
+                me.browserDetacher();
+                me.browser = null;
+                me.browserDetacher = null;
+            }
 
             throw e;
         }

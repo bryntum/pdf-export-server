@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
-const { getTmpFilePath, assertImage } = require('./utils.js');
+const { getTmpFilePath } = require('./utils.js');
 
 const testPageHTML = fs.readFileSync(path.join(__dirname, 'samples/smoke/base.html'), 'utf-8');
 const commonTestData = {

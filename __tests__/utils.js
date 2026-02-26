@@ -94,6 +94,11 @@ async function startServer(config = {}) {
 }
 
 async function stopServer(server) {
+    // Stop the queue and close all browser instances first
+    if (server.taskQueue) {
+        server.taskQueue.stop();
+    }
+
     await new Promise(resolve => {
         if (server.httpServer) {
             server.httpServer.close(resolve);
