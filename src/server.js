@@ -45,7 +45,6 @@ if (config['no-sandbox']) {
 
 if (config['disable-web-security']) {
     chromiumArgs.push('--disable-web-security');
-    chromiumArgs.push('--user-data-dir=tmp/chrome-user-data');
 }
 
 config.chromiumArgs = chromiumArgs;

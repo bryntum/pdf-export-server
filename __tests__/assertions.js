@@ -6,6 +6,8 @@ const { getTmpFilePath, assertImage } = require('./utils.js');
 
 const testPageHTML = fs.readFileSync(path.join(__dirname, 'samples/smoke/base.html'), 'utf-8');
 const commonTestData = {
+    // Navigate to this URL to fix web security issues
+    clientURL    : 'http://localhost:{port}/resources/build/grid.css',
     orientation  : 'portrait',
     // This is calculated canvas size for the HTML being rendered
     format       : '1120*2389',
@@ -28,7 +30,7 @@ const testDataPNG = {
 https.globalAgent.options.rejectUnauthorized = false;
 
 /**
- * @param {Object} json
+ * @param {String} json
  * @param {'http'|'https'} protocol
  * @param {'pdf'|'png'} fileFormat
  * @param {String} host
@@ -37,6 +39,8 @@ https.globalAgent.options.rejectUnauthorized = false;
  * @returns {Promise<Buffer>}
  */
 async function getFile(json, protocol, fileFormat, host, port, timeout) {
+    json = json.replace(/{port}/g, String(port));
+
     return new Promise((resolve, reject) => {
         const request = (protocol === 'http' ? http : https).request({
             hostname : host,
@@ -108,7 +112,19 @@ async function assertExportedFile({ protocol, host, port, fileFormat }) {
     return result;
 }
 
+async function waitForWithTimeout(promise, timeout) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+            setTimeout(() => {
+                reject(new Error(`Promise timed out after ${timeout}ms.`));
+            }, timeout);
+        })
+    ]);
+}
+
 module.exports = {
     getFile,
-    assertExportedFile
+    assertExportedFile,
+    waitForWithTimeout
 };

@@ -25,6 +25,12 @@ module.exports = class ExportServer {
         });
     }
 
+    async waitForQueueEvent(eventName) {
+        return new Promise(resolve => {
+            this.taskQueue.once(eventName, resolve);
+        });
+    }
+
     /**
      * Concatenate an array of PDF buffers and return the combined result. This function uses the muhammara package, a
      * copy the muhammara binary is delivered next to the executable.

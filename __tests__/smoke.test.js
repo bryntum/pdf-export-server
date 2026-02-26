@@ -1,5 +1,5 @@
 const { startServer, stopServer, certExists, getLoggerConfig } = require('./utils.js');
-const { assertExportedFile } = require('./assertions.js');
+const { assertExportedFile, waitForWithTimeout } = require('./assertions.js');
 
 jest.setTimeout(3 * 60 * 1000);
 
@@ -40,27 +40,11 @@ describe('Should export over HTTP', () => {
 
         await assertExportedFile({ protocol, host, port: server.httpPort, fileFormat });
 
-        // Waiting for 10 seconds, export server should kill all idle workers
-        await new Promise(resolve => {
-            setTimeout(() => resolve(), 10000);
-        });
+        // Wait for queue to empty
+        await waitForWithTimeout(server.waitForQueueEvent('empty'), 1000 * 5);
 
-        const promises = [
-            assertExportedFile({ protocol, host, port: server.httpPort, fileFormat }),
-            new Promise(resolve => {
-                setTimeout(() => {
-                    resolve('timeout');
-                }, 1000 * 30);
-            })
-        ];
-
-        const winner = await Promise.race(promises);
-
-        await Promise.allSettled(promises);
-
-        if (winner === 'timeout') {
-            fail('Server have not returned file in 30 seconds');
-        }
+        // Export another file, it should create workers again and return file
+        await waitForWithTimeout(assertExportedFile({ protocol, host, port: server.httpPort, fileFormat }), 1000 * 5);
     });
 });
 

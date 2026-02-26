@@ -1,4 +1,3 @@
-const fs = require('fs');
 const { EventEmitter } = require('events');
 const puppeteer = require('puppeteer');
 const { RequestCancelError } = require('./exception.js');
@@ -121,13 +120,28 @@ class Queue extends Loggable {
         super();
         const me = this;
 
+        /**
+         * Max number of workers to run concurrently
+         * @type {Number}
+         */
         me.maxWorkers = Number(maxWorkers);
+
+        /**
+         * Flag to use tabs instead of browser instances
+         * @type {Boolean}
+         */
         me.useTabs = useTabs;
 
-        // Boolean flag to use quick loading (waitUntil load). Makes pages to export faster, fonts might be missing.
+        /**
+         * Flag to use quick loading (waitUntil load). Makes pages to export faster, fonts might be missing.
+         * @type {Boolean}
+         */
         me.quick = quick;
 
-        // Used to switch queue to testing mode
+        /**
+         * Used to switch queue to testing mode
+         * @type {Boolean}
+         */
         me.testing = testing;
 
         // List of html chunks to convert to pdf/png
@@ -155,6 +169,8 @@ class Queue extends Loggable {
             }
             else {
                 me.info('All workers destroyed, queue is empty');
+
+                me.emit('empty');
 
                 if (me._browser) {
                     me.info('Stopping browser');

@@ -76,10 +76,9 @@ async function startServer(config = {}) {
         [protocol]       : port,
         'max-workers'    : workers,
         findNextHttpPort : true,
+        // Host resources locally to maintain stability
+        resources        : path.join('__tests__', 'samples', 'resources'),
         chromiumArgs     : [
-            '--disable-web-security',
-            '--user-data-dir=/tmp/chrome', // A user data directory is often required
-            // Other necessary flags for certain environments (e.g., Docker, Linux)
             '--no-sandbox',
             '--disable-setuid-sandbox'
         ]
