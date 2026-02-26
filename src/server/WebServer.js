@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const { nanoid } = require('nanoid');
 const http = require('http');
 const https = require('https');
-const { server : WebSocketServer, connection : WebSocketConnection } = require('websocket');
+const { WebSocketServer, WebSocket } = require('ws');
 const fs = require('fs');
 const path = require('path');
 const serveStatic = require('serve-static');
@@ -13,6 +13,10 @@ const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
 const { getId } = require('../utils/helpers.js');
 const packageInfo = require('../../package.json');
+
+const CLOSE_REASON = {
+    NORMAL : 1000
+}
 
 module.exports = class WebServer extends ExportServer {
     constructor(config) {
@@ -85,13 +89,11 @@ module.exports = class WebServer extends ExportServer {
 
             if (options.websocket) {
                 me.wsServer = new WebSocketServer({
-                    httpServer : me.httpServer,
-                    maxReceivedFrameSize : 0x1000000,
-                    maxReceivedMessageSize : 0x5000000
+                    server     : me.httpServer,
+                    maxPayload : 0x5000000
                 });
 
-                me.wsServer.on('request', me.handleExportWebSocketRequest.bind(me));
-                me.wsServer._connectionTimeout = options.timeout;
+                me.wsServer.on('connection', (ws, req) => me.handleExportWebSocketConnection(ws, req, options.timeout));
             }
         }
 
@@ -107,12 +109,11 @@ module.exports = class WebServer extends ExportServer {
 
             if (options.websocket) {
                 me.wssServer = new WebSocketServer({
-                    httpServer : me.httpsServer,
-                    maxReceivedFrameSize : 0x1000000,
-                    maxReceivedMessageSize : 0x5000000
+                    server     : me.httpsServer,
+                    maxPayload : 0x5000000
                 });
 
-                me.wssServer.on('request', me.handleExportWebSocketRequest.bind(me));
+                me.wssServer.on('connection', (ws, req) => me.handleExportWebSocketConnection(ws, req, options.timeout));
             }
         }
     }
@@ -227,12 +228,13 @@ module.exports = class WebServer extends ExportServer {
         });
     }
 
-    handleExportWebSocketRequest(request) {
+    handleExportWebSocketConnection(ws, req, timeout) {
         const me = this;
-        const connection = request.accept();
-        const origin = `${request.socket.server === me.httpServer ? 'http' : 'https'}://${request.host}/`;
-        const { timeout } = (me.httpServer || me.httpsServer);
+        const protocol = req.socket.server === me.httpServer ? 'http' : 'https';
+        const host = req.headers.host || req.headers[':authority'] || 'localhost';
+        const origin = `${protocol}://${host}/`;
         const connectionId = getId();
+        const { remoteAddress } = req.socket;
 
         const config = {};
         const pages = [];
@@ -240,17 +242,17 @@ module.exports = class WebServer extends ExportServer {
         let timer;
 
         me.logger.log('info', `[WebSocket@${connectionId}] Connection opened`);
-        me.logger.log('verbose', `[WebSocket@${connectionId}] Remote address: ${connection.remoteAddress}`);
+        me.logger.log('verbose', `[WebSocket@${connectionId}] Remote address: ${remoteAddress}`);
 
-        connection.on('message', async function (message) {
+        ws.on('message', async function (data, isBinary) {
             if (!timer) {
                 timer = setTimeout(() => {
-                    connection.drop(WebSocketConnection.CLOSE_REASON_NORMAL, `Export request did not finish in ${timeout}ms`)
+                    ws.close(CLOSE_REASON.NORMAL, `Export request did not finish in ${timeout}ms`);
                 }, timeout);
             }
 
-            if (message.type === 'utf8') {
-                const request = JSON.parse(message.utf8Data);
+            if (!isBinary) {
+                const request = JSON.parse(data.toString());
 
                 // If this is a final message, start generating PDF
                 if (request.done) {
@@ -258,21 +260,21 @@ module.exports = class WebServer extends ExportServer {
 
                     me.logger.log('verbose', `[WebSocket@${connectionId}] Generating ${config.fileFormat.toUpperCase()}`);
 
-                    const fileStream = await me.exportRequestHandler(config, connectionId, connection);
+                    const fileStream = await me.exportRequestHandler(config, connectionId, ws);
 
                     me.logger.log('verbose', `[WebSocket@${connectionId}] ${config.fileFormat.toUpperCase()} generated`);
 
-                    if (connection.connected) {
+                    if (ws.readyState === WebSocket.OPEN) {
                         clearTimeout(timer);
 
                         if (request.sendAsBinary) {
                             const buf = await buffer(fileStream);
-                            connection.sendBytes(buf);
+                            ws.send(buf);
 
                             me.logger.log('verbose', `[WebSocket@${connectionId}] sent ${buf.length} bytes`);
                         }
                         else {
-                            connection.sendUTF(JSON.stringify({
+                            ws.send(JSON.stringify({
                                 success : true,
                                 url     : me.setFile(origin, config, fileStream)
                             }));
@@ -292,9 +294,9 @@ module.exports = class WebServer extends ExportServer {
             }
         });
 
-        connection.on('close', function (reasonCode, description) {
+        ws.on('close', function (code, reason) {
             me.logger.log('info', `[WebSocket@${connectionId}] Connection closed`);
-            me.logger.log('verbose', `[WebSocket@${connectionId}] reason: ${reasonCode} - ${description}`);
+            me.logger.log('verbose', `[WebSocket@${connectionId}] reason: ${code} - ${reason}`);
         });
     }
 

@@ -49,7 +49,6 @@
     "nanoid": "~3.3.11",
     "puppeteer": "~24.36.1",
     "serve-static": "~1.16.2",
-    "websocket": "~1.0.35",
     "winston": "~3.2.1",
     "winston-daily-rotate-file": "~4.4.1",
     "ws": "~8.19.0"
