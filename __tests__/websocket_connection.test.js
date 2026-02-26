@@ -1,6 +1,9 @@
 const { startServer, stopServer, getLoggerConfig } = require('./utils.js');
 const WebSocket = require('ws');
-const testDataPDF = require('./samples/smoke/base_https.pdf.json');
+const fs = require('fs');
+const path = require('path');
+
+const testPageHTML = fs.readFileSync(path.join(__dirname, 'samples', 'smoke', 'base.html'), 'utf-8');
 
 jest.setTimeout(3 * 60 * 1000);
 
@@ -126,7 +129,7 @@ describe('WebSocket Connection Tests', () => {
         // Prepare messages with actual HTML content
         const exportMessage = {
             ...messages[0],
-            html : testDataPDF.html
+            html : [{ html : testPageHTML }]
         };
         const doneMessage = {
             ...messages[1],
@@ -162,7 +165,7 @@ describe('WebSocket Connection Tests', () => {
         // Prepare messages with actual HTML content
         const exportMessage = {
             ...messages[0],
-            html : testDataPDF.html
+            html : [{ html : testPageHTML }]
         };
         const doneMessage = {
             ...messages[1],
@@ -200,12 +203,12 @@ describe('WebSocket Connection Tests', () => {
             fileName    : 'MultiPage',
             format      : 'A4',
             orientation : 'portrait',
-            html        : testDataPDF.html[0].html
+            html        : [{ html : testPageHTML }]
         };
 
         // Send second page (just html, config is already set)
         const secondPageMessage = {
-            html : testDataPDF.html[0].html
+            html : [{ html : testPageHTML }]
         };
 
         // Done message
