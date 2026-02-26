@@ -82,10 +82,10 @@ async function getFile(json, protocol, fileFormat, host, port, timeout) {
     });
 }
 
-async function assertExportedFile({ protocol, host, port, fileFormat }) {
+async function assertExportedFile({ protocol, host, port, fileFormat, timeout }) {
     const json = JSON.stringify(fileFormat === 'pdf' ? testDataPDF : testDataPNG);
 
-    const exportedFile = await getFile(json, protocol, fileFormat, host, port);
+    const exportedFile = await getFile(json, protocol, fileFormat, host, port, timeout);
 
     let baseSize = fs.statSync(path.join(process.cwd(), '__tests__', 'samples', 'smoke', `base_https.${fileFormat}`)).size;
 
