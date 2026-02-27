@@ -1,4 +1,4 @@
-const { createLogger, format, transports } = require('winston');
+const { createLogger, format, transports : winstonTransports } = require('winston');
 require('winston-daily-rotate-file');
 
 let loggers = {};
@@ -19,27 +19,23 @@ module.exports = {
                 return `${timestamp} ${level}: ${message}`;
             });
 
-            let transport;
+            const transports = [new winstonTransports.Console({ level : 'error' })];
 
-            if (config && config.rotate) {
-                transport = new transports.DailyRotateFile(config.rotate);
+            if (config?.rotate) {
+                transports.push(new winstonTransports.DailyRotateFile(config.rotate));
             }
-            else if (config && config.file) {
-                transport = new transports.File(config.file);
-            }
-            else {
-                transport = new transports.Console();
+            else if (config?.file) {
+                transports.push(new winstonTransports.File(config.file));
             }
 
-            loggers[hash] = result = createLogger(Object.assign({
+            loggers[hash] = result = createLogger({
                 format: combine(
                     timestamp(),
                     myFormat
                 ),
-                transports: [
-                    transport
-                ]
-            }, config || {}));
+                transports,
+                ...config
+            });
 
             // Log unhandled promise rejections
             process.on('unhandledRejection', e => {

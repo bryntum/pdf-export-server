@@ -74,7 +74,7 @@ function isWSL() {
     }
 }
 
-appConfig.logger.level = 'verbose';
+appConfig.logger.level = 'error';
 
 async function startServer(config = {}) {
     const { protocol, port, workers = 1 } = config;
