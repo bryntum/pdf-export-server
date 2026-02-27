@@ -45,7 +45,8 @@ RUN (cd node_modules/muhammara && rm -rf node_modules package-lock.json && npm i
 # Run install again to update lock file
 RUN npm i
 
-COPY --parents --chown=pptruser:pptruser ["src", "__tests__", "/home/pptruser/"]
+COPY --chown=pptruser:pptruser src /home/pptruser/src
+COPY --chown=pptruser:pptruser __tests__ /home/pptruser/__tests__
 COPY --chown=pptruser:pptruser ["app.config.js", ".puppeteerrc.cjs", "babel.config.js", "/home/pptruser/"]
 
 RUN npm run test
