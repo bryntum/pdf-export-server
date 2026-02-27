@@ -65,14 +65,14 @@
     "tar": "7.5.9",
     "glob": "13.0.6",
     "@isaacs/brace-expansion": "5.0.1",
-    "minimatch": "10.2.1"
+    "minimatch": "10.2.3"
   },
   "engines": {
     "node": ">=20"
   },
   "jest": {
     "testMatch": [
-      "**/__tests__/**/*.test.js"
+      "<rootDir>/__tests__/**/*.test.js"
     ],
     "setupFiles": [
       "<rootDir>/__tests__/jest.setup.js"

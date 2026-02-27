@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
-const { getTmpFilePath } = require('./utils.js');
+const { getTmpFilePath, RESOURCES_PORT } = require('./utils.js');
 
 const testPageHTML = fs.readFileSync(path.join(__dirname, 'samples/smoke/base.html'), 'utf-8');
 const commonTestData = {
@@ -39,7 +39,7 @@ https.globalAgent.options.rejectUnauthorized = false;
  * @returns {Promise<Buffer>}
  */
 async function getFile(json, protocol, fileFormat, host, port, timeout) {
-    json = json.replace(/{port}/g, String(port));
+    json = json.replace(/{port}/g, String(RESOURCES_PORT));
 
     // Default timeout: 30 seconds for CI environments
     const requestTimeout = timeout != null ? timeout : 30000;
@@ -120,10 +120,17 @@ async function assertExportedFile({ protocol, host, port, fileFormat, timeout })
 }
 
 async function waitForWithTimeout(promise, timeout) {
+    let timeoutId;
+
     return Promise.race([
-        promise,
+        promise.then(
+            (result) => {
+                clearTimeout(timeoutId);
+                return result;
+            }
+        ),
         new Promise((_, reject) => {
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 reject(new Error(`Promise timed out after ${timeout}ms.`));
             }, timeout);
         })
