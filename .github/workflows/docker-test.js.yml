@@ -25,6 +25,9 @@ on:
       - '.puppeteerrc.cjs'
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
   build-docker:
     runs-on: ubuntu-latest
