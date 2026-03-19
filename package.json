@@ -45,7 +45,7 @@
     "join-images": "~1.1.5",
     "memory-streams": "~0.1.3",
     "mkdirp": "~0.5.6",
-    "muhammara": "~6.0.3",
+    "muhammara": "~6.0.4",
     "nanoid": "~3.3.11",
     "puppeteer": "~24.36.1",
     "serve-static": "~1.16.2",
@@ -62,7 +62,7 @@
     "rimraf": "~2.6.2"
   },
   "overrides": {
-    "tar": "7.5.9",
+    "tar": "7.5.11",
     "glob": "13.0.6",
     "@isaacs/brace-expansion": "5.0.1",
     "minimatch": "10.2.3"
