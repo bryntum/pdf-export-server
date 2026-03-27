@@ -2,19 +2,20 @@
 
 FROM node:24-slim
 
-# Install system dependencies required for Chromium/Chrome to run
-# Puppeteer will download its own browser during npm install
+# Skip Puppeteer's Chrome download - use system Chromium instead
+# Required for arm64 Linux since Chrome for Testing lacks arm64 Linux builds
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# Install system Chromium and dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     # Build tools for native modules
     build-essential python3 make gcc g++ \
-    # Chromium dependencies
-    ca-certificates fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 \
-    libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 \
-    libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 \
-    libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 \
-    libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 \
-    libxss1 libxtst6 lsb-release xdg-utils wget \
+    # System Chromium (includes all required dependencies, has arm64 builds)
+    chromium \
+    # OpenSSL for certificate generation
+    openssl \
     # Fonts for international character support
     fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf \
     && rm -rf /var/lib/apt/lists/*
@@ -47,7 +48,7 @@ RUN npm i
 
 COPY --chown=pptruser:pptruser src /home/pptruser/src
 COPY --chown=pptruser:pptruser __tests__ /home/pptruser/__tests__
-COPY --chown=pptruser:pptruser ["app.config.js", ".puppeteerrc.cjs", "babel.config.js", "/home/pptruser/"]
+COPY --chown=pptruser:pptruser ["app.config.js", "babel.config.js", "/home/pptruser/"]
 
 RUN npm run test
 
