@@ -12,7 +12,6 @@ on:
       - 'Dockerfile'
       - 'app.config.js'
       - 'babel.config.js'
-      - '.puppeteerrc.cjs'
     branches: [ main ]
   pull_request:
     paths:
@@ -22,7 +21,6 @@ on:
       - 'Dockerfile'
       - 'app.config.js'
       - 'babel.config.js'
-      - '.puppeteerrc.cjs'
     branches: [ main ]
 
 permissions:

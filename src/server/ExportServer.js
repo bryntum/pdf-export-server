@@ -21,6 +21,10 @@ module.exports = class ExportServer {
         this.logger = getLogger(logger);
 
         this.taskQueue.on('log', ({ level, message, id, label }) => {
+            // Skip logging deliberate testing exceptions
+            if (testing && message?.includes?.('Testing exception')) {
+                return;
+            }
             this.logger.log(level, `[${label}@${id}] ${message}`);
         });
     }

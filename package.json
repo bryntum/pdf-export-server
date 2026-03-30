@@ -65,7 +65,14 @@
     "tar": "7.5.11",
     "glob": "13.0.6",
     "@isaacs/brace-expansion": "5.0.1",
-    "minimatch": "10.2.3"
+    "minimatch": "10.2.3",
+    "picomatch": "4.0.4",
+    "anymatch": {
+      "picomatch": "2.3.2"
+    },
+    "micromatch": {
+      "picomatch": "2.3.2"
+    }
   },
   "engines": {
     "node": ">=20"
