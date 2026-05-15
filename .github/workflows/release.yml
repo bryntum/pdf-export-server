@@ -2,11 +2,14 @@ name: Release
 
 # Manually triggered from the GitHub UI (Actions → Release → Run workflow).
 # Order of operations:
-#   1. bump version locally
-#   2. run tests
-#   3. build & push Docker image (so a broken image never produces a git tag)
-#   4. commit, tag, push
-#   5. publish GitHub Release with auto-generated notes (.github/release.yml)
+#   1. prepare:  run tests, bump version, commit to main (no tag yet)
+#   2. build:    build & push multi-arch image from the bumped commit
+#                (uses docker/github-builder — native amd64 + arm64 runners,
+#                 in-Dockerfile tests run natively on each arch)
+#   3. finalize: tag the bumped commit, push tag, publish GitHub Release
+#
+# If `build` fails, the bumped commit is on main but no tag/release/image
+# exists. Recovery: revert the commit and retry, or fix and rerun.
 on:
   workflow_dispatch:
     inputs:
@@ -25,7 +28,7 @@ on:
         type: boolean
         default: false
       dry-run:
-        description: 'Dry run (no commit, tag, image push or release)'
+        description: 'Dry run (test + report what would happen; no commit, image push, tag, or release)'
         required: false
         type: boolean
         default: false
@@ -34,11 +37,16 @@ permissions:
   contents: read
 
 jobs:
-  release:
-    name: Release
+  prepare:
+    name: Test, bump and commit
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      current_version: ${{ steps.bump.outputs.current_version }}
+      new_version: ${{ steps.bump.outputs.new_version }}
+      tag: ${{ steps.bump.outputs.tag }}
+      sha: ${{ steps.commit.outputs.sha }}
     steps:
       - name: Guard against running on a non-default branch
         if: github.ref != format('refs/heads/{0}', github.event.repository.default_branch)
@@ -61,7 +69,7 @@ jobs:
 
       - run: npm test
 
-      - name: Bump version (working tree only)
+      - name: Bump version
         id: bump
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
@@ -72,62 +80,90 @@ jobs:
           echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        if: ${{ !inputs.dry-run }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: ${{ !inputs.dry-run }}
-          tags: |
-            bryntum/pdf-export-server:${{ steps.bump.outputs.new_version }}
-            bryntum/pdf-export-server:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
       - name: Configure git
         if: ${{ !inputs.dry-run }}
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
-      - name: Commit, tag and push
+      - name: Commit bump to main (no tag yet)
+        id: commit
         if: ${{ !inputs.dry-run }}
         run: |
           git add package.json package-lock.json
           git commit -m "chore(release): ${{ steps.bump.outputs.tag }}"
-          git tag -a "${{ steps.bump.outputs.tag }}" -m "${{ steps.bump.outputs.tag }}"
           git push origin HEAD
-          git push origin "${{ steps.bump.outputs.tag }}"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build & push multi-arch image
+    needs: prepare
+    if: ${{ !inputs.dry-run }}
+    permissions:
+      contents: read
+      id-token: write
+    uses: docker/github-builder/.github/workflows/build.yml@v1
+    with:
+      output: image
+      push: true
+      platforms: linux/amd64,linux/arm64
+      cache: true
+      meta-images: bryntum/pdf-export-server
+      meta-tags: |
+        type=raw,value=${{ needs.prepare.outputs.new_version }}
+        type=raw,value=latest
+    secrets:
+      registry-auths: |
+        - username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+  finalize:
+    name: Tag and publish release
+    needs: [prepare, build]
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.sha }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Tag and push
+        run: |
+          git tag -a "${{ needs.prepare.outputs.tag }}" -m "${{ needs.prepare.outputs.tag }}"
+          git push origin "${{ needs.prepare.outputs.tag }}"
 
       - name: Create GitHub Release
-        if: ${{ !inputs.dry-run }}
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.bump.outputs.tag }}
-          name: ${{ steps.bump.outputs.tag }}
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.tag }}
           generate_release_notes: true
           prerelease: ${{ inputs.prerelease }}
           draft: false
 
-      - name: Summary
-        if: ${{ always() }}
-        run: |
+  summary:
+    name: Summary
+    needs: [prepare, build, finalize]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
           {
             echo "## Release Summary"
             echo ""
-            echo "- **Previous version:** ${{ steps.bump.outputs.current_version }}"
-            echo "- **New version:** ${{ steps.bump.outputs.new_version }}"
-            echo "- **Tag:** ${{ steps.bump.outputs.tag }}"
+            echo "- **Previous version:** ${{ needs.prepare.outputs.current_version }}"
+            echo "- **New version:** ${{ needs.prepare.outputs.new_version }}"
+            echo "- **Tag:** ${{ needs.prepare.outputs.tag }}"
             echo "- **Pre-release:** ${{ inputs.prerelease }}"
             echo "- **Dry run:** ${{ inputs.dry-run }}"
-            echo "- **Docker image:** bryntum/pdf-export-server:${{ steps.bump.outputs.new_version }}"
+            echo "- **Docker image:** bryntum/pdf-export-server:${{ needs.prepare.outputs.new_version }} (linux/amd64, linux/arm64)"
           } >> "$GITHUB_STEP_SUMMARY"
