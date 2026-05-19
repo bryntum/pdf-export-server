@@ -30,11 +30,13 @@ RUN apt-get update \
 # - brace-expansion 5.0.4 -> 5.0.5 (CVE-2026-33750)
 RUN npm install -g npm@11.12.1 \
     && curl -sL https://registry.npmjs.org/picomatch/-/picomatch-4.0.4.tgz -o /tmp/picomatch.tgz \
-    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.5.tgz -o /tmp/brace-expansion.tgz \
+    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.6.tgz -o /tmp/brace-expansion.tgz \
+    && curl -sL https://registry.npmjs.org/ip-address/-/ip-address-10.2.0.tgz -o /tmp/ip-address.tgz \
     && cd /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules \
     && rm -rf picomatch && tar -xzf /tmp/picomatch.tgz && mv package picomatch \
     && cd /usr/local/lib/node_modules/npm/node_modules \
     && rm -rf brace-expansion && tar -xzf /tmp/brace-expansion.tgz && mv package brace-expansion \
+    && rm -rf ip-address && tar -xzf /tmp/ip-address.tgz && mv package ip-address \
     && rm /tmp/picomatch.tgz /tmp/brace-expansion.tgz
 
 # Add user so we don't need --no-sandbox
