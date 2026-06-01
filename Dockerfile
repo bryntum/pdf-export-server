@@ -1,6 +1,6 @@
 # Based on https://pptr.dev/troubleshooting#running-puppeteer-in-docker
 
-FROM node:24-slim
+FROM node:24-trixie-slim
 
 # Skip Puppeteer's Chrome download - use system Chromium instead
 # Required for arm64 Linux since Chrome for Testing lacks arm64 Linux builds
@@ -19,7 +19,7 @@ RUN apt-get update \
     # curl for downloading npm security patches
     curl ca-certificates \
     # Fonts for international character support
-    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf \
+    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst-one fonts-freefont-ttf \
     # Upgrade all packages to get security patches (fixes chromium and libpng CVEs)
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
