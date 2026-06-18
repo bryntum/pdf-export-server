@@ -63,7 +63,7 @@ WORKDIR /home/pptruser
 # Clear npm cache at end to prevent stale version info in Docker Scout SBOM
 RUN npm i \
     && cd node_modules/muhammara && rm -rf node_modules package-lock.json \
-    && node -e "const p=require('./package.json'); p.overrides={tar:'7.5.11',minimatch:'10.2.3',picomatch:'4.0.4'}; require('fs').writeFileSync('./package.json',JSON.stringify(p,null,2));" \
+    && node -e "const p=require('./package.json'); p.overrides={tar:'7.5.16',minimatch:'10.2.3',picomatch:'4.0.4'}; require('fs').writeFileSync('./package.json',JSON.stringify(p,null,2));" \
     && npm i \
     && cd /home/pptruser && npm i \
     && npm cache clean --force \
