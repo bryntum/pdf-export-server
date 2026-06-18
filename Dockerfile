@@ -28,8 +28,11 @@ RUN apt-get update \
 # Then patch npm's bundled dependencies to fix remaining CVEs:
 # - picomatch 4.0.3 -> 4.0.4 (CVE-2026-33671, CVE-2026-33672)
 # - brace-expansion 5.0.4 -> 5.0.5 (CVE-2026-33750)
+# - tar 7.5.11 -> 7.6.16
+# - ip-address -> 10.2.0
 RUN npm install -g npm@11.12.1 \
     && curl -sL https://registry.npmjs.org/picomatch/-/picomatch-4.0.4.tgz -o /tmp/picomatch.tgz \
+    && curl -sL https://registry.npmjs.org/tar/-/tar-7.5.16.tgz -o /tmp/tar.tgz \
     && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.6.tgz -o /tmp/brace-expansion.tgz \
     && curl -sL https://registry.npmjs.org/ip-address/-/ip-address-10.2.0.tgz -o /tmp/ip-address.tgz \
     && cd /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules \
@@ -37,7 +40,8 @@ RUN npm install -g npm@11.12.1 \
     && cd /usr/local/lib/node_modules/npm/node_modules \
     && rm -rf brace-expansion && tar -xzf /tmp/brace-expansion.tgz && mv package brace-expansion \
     && rm -rf ip-address && tar -xzf /tmp/ip-address.tgz && mv package ip-address \
-    && rm /tmp/picomatch.tgz /tmp/brace-expansion.tgz
+    && rm -rf tar && tar -xzf /tmp/tar.tgz && mv package tar \
+    && rm /tmp/picomatch.tgz /tmp/brace-expansion.tgz /tmp/tar.tgz
 
 # Add user so we don't need --no-sandbox
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
