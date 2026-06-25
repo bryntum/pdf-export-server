@@ -191,7 +191,7 @@ class Queue extends Loggable {
         // it cannot refer to the instance.
         me.startPuppeteer = async function(scope) {
             const browser = await puppeteer.launch({
-                executablePath : chromiumExecutablePath,
+                executablePath : await chromiumExecutablePath,
                 args           : chromiumArgs
             });
 
