@@ -24,26 +24,8 @@ RUN apt-get update \
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade npm to get fixed tar (7.5.11) bundled with npm, fixing CVE-2026-31802 and CVE-2026-29786
-# Then patch npm's bundled dependencies to fix remaining CVEs:
-# - picomatch 4.0.3 -> 4.0.4 (CVE-2026-33671, CVE-2026-33672)
-# - brace-expansion 5.0.4 -> 5.0.5 (CVE-2026-33750)
-# - tar 7.5.11 -> 7.6.16
-# - ip-address -> 10.2.0
-RUN npm install -g npm@11.12.1 \
-    && curl -sL https://registry.npmjs.org/picomatch/-/picomatch-4.0.4.tgz -o /tmp/picomatch.tgz \
-    && curl -sL https://registry.npmjs.org/pacote/-/pacote-21.5.1.tgz -o /tmp/pacote.tgz \
-    && curl -sL https://registry.npmjs.org/tar/-/tar-7.5.16.tgz -o /tmp/tar.tgz \
-    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.6.tgz -o /tmp/brace-expansion.tgz \
-    && curl -sL https://registry.npmjs.org/ip-address/-/ip-address-10.2.0.tgz -o /tmp/ip-address.tgz \
-    && cd /usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules \
-    && rm -rf picomatch && tar -xzf /tmp/picomatch.tgz && mv package picomatch \
-    && cd /usr/local/lib/node_modules/npm/node_modules \
-    && rm -rf brace-expansion && tar -xzf /tmp/brace-expansion.tgz && mv package brace-expansion \
-    && rm -rf pacote && tar -xzf /tmp/pacote.tgz && mv package pacote \
-    && rm -rf ip-address && tar -xzf /tmp/ip-address.tgz && mv package ip-address \
-    && rm -rf tar && tar -xzf /tmp/tar.tgz && mv package tar \
-    && rm /tmp/picomatch.tgz /tmp/pacote.tgz /tmp/tar.tgz /tmp/brace-expansion.tgz /tmp/ip-address.tgz
+# Upgrade npm to get latest secure version
+RUN npm install -g npm@11.18.0
 
 # Add user so we don't need --no-sandbox
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
