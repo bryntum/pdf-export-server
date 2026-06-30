@@ -90,8 +90,7 @@ jobs:
           tags: |
             bryntum/pdf-export-server:${{ steps.bump.outputs.new_version }}
             bryntum/pdf-export-server:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
 
       - name: Configure git
         if: ${{ !inputs.dry-run }}
