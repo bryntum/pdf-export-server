@@ -62,10 +62,10 @@
     "rimraf": "~2.6.2"
   },
   "overrides": {
-    "tar": "7.5.16",
+    "tar": "7.5.19",
     "glob": "13.0.6",
     "@isaacs/brace-expansion": "5.0.5",
-    "js-yaml": "4.2.0",
+    "js-yaml": "4.3.0",
     "minimatch": "10.2.3",
     "picomatch": "4.0.4",
     "@xmldom/xmldom": "0.8.13",
