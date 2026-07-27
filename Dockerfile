@@ -25,7 +25,13 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade npm to get latest secure version
-RUN npm install -g npm@11.18.0
+RUN npm install -g npm@11.18.0 \
+    && curl -sL https://registry.npmjs.org/tar/-/tar-7.5.22.tgz -o /tmp/tar.tgz \
+    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.8.tgz -o /tmp/brace-expansion.tgz \
+    && cd /usr/local/lib/node_modules/npm/node_modules \
+    && rm -rf brace-expansion && tar -xzf /tmp/brace-expansion.tgz && mv package brace-expansion \
+    && rm -rf tar && tar -xzf /tmp/tar.tgz && mv package tar \
+    && rm /tmp/tar.tgz /tmp/brace-expansion.tgz
 
 # Add user so we don't need --no-sandbox
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
@@ -51,7 +57,7 @@ WORKDIR /home/pptruser
 # Clear npm cache at end to prevent stale version info in Docker Scout SBOM
 RUN npm i \
     && cd node_modules/muhammara && rm -rf node_modules package-lock.json \
-    && node -e "const p=require('./package.json'); p.overrides={tar:'7.5.19',minimatch:'10.2.3',picomatch:'4.0.4'}; require('fs').writeFileSync('./package.json',JSON.stringify(p,null,2));" \
+    && node -e "const p=require('./package.json'); p.overrides={tar:'7.5.22',minimatch:'10.2.3',picomatch:'4.0.4'}; require('fs').writeFileSync('./package.json',JSON.stringify(p,null,2));" \
     && npm i \
     && cd /home/pptruser && npm i \
     && npm cache clean --force \
