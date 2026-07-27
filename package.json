@@ -47,11 +47,11 @@
     "mkdirp": "~0.5.6",
     "muhammara": "~6.0.4",
     "nanoid": "~3.3.11",
-    "puppeteer": "^25.1.0",
+    "puppeteer": "^25.4.0",
     "serve-static": "~1.16.2",
     "winston": "~3.2.1",
     "winston-daily-rotate-file": "~4.4.1",
-    "ws": "~8.21.0"
+    "ws": "~8.21.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.0",
@@ -62,21 +62,22 @@
     "rimraf": "~2.6.2"
   },
   "overrides": {
-    "tar": "7.5.19",
-    "glob": "13.0.6",
-    "@isaacs/brace-expansion": "5.0.5",
-    "js-yaml": "4.3.0",
-    "minimatch": "10.2.3",
-    "picomatch": "4.0.4",
-    "@xmldom/xmldom": "0.8.13",
-    "lodash": "4.18.1",
     "anymatch": {
       "picomatch": "2.3.2"
     },
+    "brace-expansion": "5.0.8",
+    "glob": "13.0.6",
+    "js-yaml": "4.3.0",
+    "lodash": "4.18.1",
     "micromatch": {
       "picomatch": "2.3.2"
     },
-    "uuid": "14.0.0"
+    "minimatch": "10.2.3",
+    "picomatch": "4.0.4",
+    "sharp": "0.35.3",
+    "tar": "7.5.22",
+    "uuid": "14.0.0",
+    "@xmldom/xmldom": "0.8.13"
   },
   "engines": {
     "node": ">=20"
