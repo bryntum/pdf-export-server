@@ -25,13 +25,17 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade npm to get latest secure version
-RUN npm install -g npm@11.18.0 \
+RUN npm install -g npm@11.19.0 \
+    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.9.tgz -o /tmp/brace-expansion.tgz \
+    && curl -sL https://registry.npmjs.org/ip-address/-/ip-address-10.5.0.tgz -o /tmp/ip-address.tgz \
     && curl -sL https://registry.npmjs.org/tar/-/tar-7.5.22.tgz -o /tmp/tar.tgz \
-    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.8.tgz -o /tmp/brace-expansion.tgz \
+    && curl -sL https://registry.npmjs.org/undici/-/undici-6.28.0.tgz -o /tmp/undici.tgz \
     && cd /usr/local/lib/node_modules/npm/node_modules \
     && rm -rf brace-expansion && tar -xzf /tmp/brace-expansion.tgz && mv package brace-expansion \
+    && rm -rf ip-address && tar -xzf /tmp/ip-address.tgz && mv package ip-address \
     && rm -rf tar && tar -xzf /tmp/tar.tgz && mv package tar \
-    && rm /tmp/tar.tgz /tmp/brace-expansion.tgz
+    && rm -rf undici && tar -xzf /tmp/undici.tgz && mv package undici \
+    && rm /tmp/tar.tgz /tmp/brace-expansion.tgz /tmp/ip-address.tgz /tmp/undici.tgz
 
 # Add user so we don't need --no-sandbox
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
