@@ -37,10 +37,10 @@
   },
   "dependencies": {
     "@types/express": "~5.0.0",
-    "body-parser": "~1.20.3",
+    "body-parser": "~2.3.0",
     "command-line-args": "~6.0.1",
     "command-line-usage": "~7.0.3",
-    "express": "~4.22.1",
+    "express": "~5.2.1",
     "express-request-id": "~3.0.0",
     "join-images": "~1.1.5",
     "memory-streams": "~0.1.3",
