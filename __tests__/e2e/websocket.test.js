@@ -114,7 +114,7 @@ describe('E2E WebSocket', () => {
             format      : 'A4',
             orientation : 'portrait',
             clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
-            html        : [{ html : htmlWithPort }]
+            html        : { html : htmlWithPort }
         };
 
         const doneMessage = {
@@ -126,7 +126,8 @@ describe('E2E WebSocket', () => {
 
         // Verify we received binary PDF data
         expect(Buffer.isBuffer(response)).toBe(true);
-        expect(response.length).toBeGreaterThan(0);
+        // A blank document renders to a ~8 KB PDF, a real export of the sample page is far larger
+        expect(response.length).toBeGreaterThan(20000);
         expect(response.slice(0, 4).toString('utf8')).toBe('%PDF');
 
         ws.close();
@@ -154,7 +155,7 @@ describe('E2E WebSocket', () => {
             format      : 'A4',
             orientation : 'portrait',
             clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
-            html        : [{ html : htmlWithPort }]
+            html        : { html : htmlWithPort }
         };
 
         const doneMessage = {
