@@ -285,7 +285,16 @@ module.exports = class WebServer extends ExportServer {
                     }
                 }
                 else {
-                    pages.push(request.html);
+                    const { html } = request;
+
+                    // Client sends one { html } page object per message. Also accept a bare html string
+                    // or an HTTP-style array of pages, so a wrong shape never reaches Chromium as an
+                    // undefined document (Chromium >= 153 rejects that with a protocol error)
+                    if (html != null) {
+                        for (const page of [].concat(html)) {
+                            pages.push(typeof page === 'string' ? { html : page } : page);
+                        }
+                    }
 
                     delete request.html;
 
