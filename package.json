@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@types/express": "~5.0.0",
-    "body-parser": "~1.20.3",
+    "body-parser": "~1.20.6",
     "command-line-args": "~6.0.1",
     "command-line-usage": "~7.0.3",
     "express": "~4.22.1",
@@ -54,7 +54,7 @@
     "ws": "~8.21.1"
   },
   "devDependencies": {
-    "@babel/preset-env": "^7.29.0",
+    "@babel/preset-env": "~7.29.7",
     "@yao-pkg/pkg": "~6.6.0",
     "jest": "~30.4.2",
     "move-file": "~1.0.0",
@@ -66,18 +66,20 @@
       "picomatch": "2.3.2"
     },
     "brace-expansion": "5.0.9",
+    "browserslist": "4.29.0",
     "glob": "13.0.6",
-    "js-yaml": "4.3.1",
+    "js-yaml": "4.3.2",
     "lodash": "4.18.1",
     "micromatch": {
       "picomatch": "2.3.2"
     },
     "minimatch": "10.2.3",
     "picomatch": "4.0.4",
-    "sharp": "0.35.3",
+    "qs": "6.16.0",
+    "sharp": "0.35.4",
     "tar": "7.5.22",
     "uuid": "14.0.0",
-    "@xmldom/xmldom": "0.8.14"
+    "@xmldom/xmldom": "0.8.15"
   },
   "engines": {
     "node": ">=20"
