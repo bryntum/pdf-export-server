@@ -3,7 +3,6 @@ const { exec } = require('@yao-pkg/pkg');
 const path = require('path');
 const fs = require('fs');
 const rimraf = require('rimraf');
-const copy = require('recursive-copy');
 const puppeteerBrowsers = require('@puppeteer/browsers');
 const { PUPPETEER_REVISIONS } = require('puppeteer-core/lib/cjs/puppeteer/revisions.js');
 
@@ -77,7 +76,7 @@ async function copyCertificates() {
     console.log('Copying HTTPS certificates...');
     fs.mkdirSync(targetCertDir, { recursive: true });
     
-    await copy(certDir, targetCertDir)
+    await fs.promises.cp(certDir, targetCertDir, { recursive: true })
       .catch(error => {
         console.error('Certificate copy failed:', error);
       });

@@ -58,14 +58,13 @@
     "@yao-pkg/pkg": "~6.6.0",
     "jest": "~30.4.2",
     "move-file": "~1.0.0",
-    "recursive-copy": "^2.0.14",
     "rimraf": "~2.6.2"
   },
   "overrides": {
     "anymatch": {
       "picomatch": "2.3.2"
     },
-    "brace-expansion": "5.0.9",
+    "brace-expansion": "5.0.12",
     "browserslist": "4.29.0",
     "glob": "13.0.6",
     "js-yaml": "4.3.2",
