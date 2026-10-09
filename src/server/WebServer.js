@@ -13,6 +13,7 @@ const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
 const { getId } = require('../utils/helpers.js');
 const { checkLimits } = require('./limits.js');
+const { warmUp } = require('./lifecycle.js');
 const packageInfo = require('../../package.json');
 
 const CLOSE_REASON = {
@@ -71,6 +72,7 @@ module.exports = class WebServer extends ExportServer {
         }
 
         app.get('/status', me.handleStatus.bind(me));
+        app.get('/ready', me.handleReady.bind(me));
 
         //Get the file, fileKey will be a guid. This serves the pdf
         app.get('/:fileKey/', me.handleFileKey.bind(me));
@@ -157,6 +159,10 @@ module.exports = class WebServer extends ExportServer {
             version : packageInfo.version,
             websocket : this.wsServer != null || this.wssServer != null
         });
+    }
+
+    handleReady(req, res) {
+        res.status(this.ready ? 200 : 503).jsonp({ ready : Boolean(this.ready) });
     }
 
     handleFileKey(req, res) {
@@ -371,13 +377,22 @@ module.exports = class WebServer extends ExportServer {
     /**
      * Start the service
      */
-    start() {
-        return Promise.all([
-            this.startHttpServer(),
-            this.startHttpsServer()
-        ]).catch(e => {
+    async start() {
+        const me = this;
+
+        try {
+            await Promise.all([
+                me.startHttpServer(),
+                me.startHttpsServer()
+            ]);
+
+            // Proves Chromium can launch before /ready reports 200
+            await warmUp(me.taskQueue, me.logger);
+            me.ready = true;
+        }
+        catch (e) {
             console.error(e);
             throw e;
-        });
+        }
     }
 };

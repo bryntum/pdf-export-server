@@ -50,7 +50,22 @@ if (config.help) {
 else if (config.http || config.https) {
     const webServer = new WebServer(config);
 
-    webServer.start();
+    webServer.start().catch(e => {
+        console.error('Server failed to start: ' + (e && e.stack || e));
+        process.exit(1);
+    });
+
+    const { drain } = require('./server/lifecycle.js');
+    process.once('SIGTERM', async () => {
+        webServer.ready = false;
+        const result = await drain({
+            pending : webServer.pendingRequests,
+            server  : webServer.httpServer || webServer.httpsServer,
+            graceMs : 30000
+        });
+        webServer.taskQueue.stop();
+        process.exit(result === 'drained' ? 0 : 1);
+    });
 }
 else {
     commands.showHelp();
