@@ -224,11 +224,12 @@ function getLoggerConfig(filename) {
  * @returns {ExportServer}
  */
 function createExportServer(config = {}) {
-    const { workers = 1, testing = false, logger } = config;
+    const { workers = 1, testing = false, logger, timeout } = config;
 
     return new ExportServer({
         'max-workers' : workers,
         testing,
+        timeout,
         logger        : logger || appConfig.logger,
         chromiumArgs  : [
             '--no-sandbox',

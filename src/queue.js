@@ -6,8 +6,12 @@ const { getId } = require('./utils/helpers.js');
 const
     // Also defined in commands.js
     MAX_WORKERS      = 5,
-    // Max amount of fails allowed before rejecting request
-    MAX_FAILS        = 3,
+    // A job is retried this many times, and only when Chromium itself died
+    MAX_FAILS        = 1,
+    // In testing mode workers throw simulated crashes at random, so allow more retries to keep tests deterministic
+    TESTING_MAX_FAILS = 3,
+    // Errors that mean Chromium itself died (the only case worth retrying)
+    CHROMIUM_CRASH_RE = /Target closed|Session closed|Protocol error|browser has disconnected|Navigation failed because browser has disconnected/i,
     // This is used for testing purposes only
     FAIL_PROBABILITY = 0.4,
     // Timeout in ms before destroying the worker
@@ -116,7 +120,7 @@ class Loggable extends EventEmitter {
 }
 
 class Queue extends Loggable {
-    constructor({ maxWorkers = MAX_WORKERS, useTabs = false, chromiumExecutablePath, chromiumArgs = [], quick = false, testing = false }) {
+    constructor({ maxWorkers = MAX_WORKERS, useTabs = false, chromiumExecutablePath, chromiumArgs = [], quick = false, testing = false, timeout, maxFails }) {
         super();
         const me = this;
 
@@ -143,6 +147,18 @@ class Queue extends Loggable {
          * @type {Boolean}
          */
         me.testing = testing;
+
+        /**
+         * Timeout in milliseconds for page.setContent / page.pdf
+         * @type {Number}
+         */
+        me.timeout = timeout;
+
+        /**
+         * Max retries of a failed job (crash only)
+         * @type {Number}
+         */
+        me.maxFails = maxFails != null ? maxFails : (testing ? TESTING_MAX_FAILS : MAX_FAILS);
 
         // List of html chunks to convert to pdf/png
         me.jobs = [];
@@ -222,6 +238,7 @@ class Queue extends Loggable {
                 browser        : me._browser,
                 quick          : me.quick,
                 testing        : me.testing,
+                timeout        : me.timeout,
                 browserFactory : me.startPuppeteer
             });
 
@@ -290,11 +307,11 @@ class Queue extends Loggable {
                 me.removeListener('jobcancel', onJobCancel);
             }
 
-            function onJobFailed(id) {
+            function onJobFailed(id, reason) {
                 if (id === requestId) {
                     detachListeners();
 
-                    reject(new Error('Failed to export task'));
+                    reject(new Error(reason ? `Failed to export task: ${reason}` : 'Failed to export task'));
                 }
             }
 
@@ -431,7 +448,10 @@ class Queue extends Loggable {
                     }
 
                     // Try to restart the job few times
-                    if (++job.failCount <= MAX_FAILS) {
+                    // In testing mode the simulated "Testing exception" stands in for a Chromium crash
+                    const chromiumCrashed = CHROMIUM_CRASH_RE.test(e.message || '') || (me.testing && /Testing exception/.test(e.message || ''));
+
+                    if (chromiumCrashed && ++job.failCount <= me.maxFails) {
                         worker.warn(`Job ${job.index + 1}/${job.length} for request ${job.requestId} failed, restarting`);
 
                         me.warn(e.stack);
@@ -446,12 +466,12 @@ class Queue extends Loggable {
                     // jobs related to this request.
                         delete me._results[job.requestId];
 
-                        worker.warn(`Job ${job.index + 1}/${job.length} for request ${job.requestId} failed after ${MAX_FAILS} attempts`);
+                        worker.warn(`Job ${job.index + 1}/${job.length} for request ${job.requestId} failed after ${job.failCount} attempts`);
 
                         me.error(e);
 
                         // This is a promise, so throwing exception here would be treated as unhandled rejection
-                        me.emit('jobfailed', job.requestId);
+                        me.emit('jobfailed', job.requestId, e && e.message);
 
                         // Put worker back to list of available ones
                         me.availableWorkers.add(worker);
@@ -505,11 +525,12 @@ class Worker extends Loggable {
     constructor(config) {
         super(config);
 
-        const { browser, browserFactory, testing, quick } = config;
+        const { browser, browserFactory, testing, quick, timeout } = config;
 
         this.browser = browser;
         this.browserFactory = browserFactory;
         this.testing = testing;
+        this.timeout = timeout;
 
         this.waitUntil = quick ? 'load' : 'networkidle0';
 
@@ -699,9 +720,9 @@ class Worker extends Loggable {
             await page.goto('about:blank');
         }
 
-        await page.setContent(html, { waitUntil : me.waitUntil });
+        await page.setContent(html, { waitUntil : me.waitUntil, timeout : me.timeout });
         await page.emulateMediaType('print');
-        return page.pdf(config);
+        return page.pdf({ ...config, timeout : me.timeout });
     }
 
     /**
@@ -736,7 +757,7 @@ class Worker extends Loggable {
             await page.goto('about:blank');
         }
 
-        await page.setContent(html, { waitUntil : me.waitUntil });
+        await page.setContent(html, { waitUntil : me.waitUntil, timeout : me.timeout });
 
         const contentElement = await page.$('.b-export-content');
 

@@ -7,7 +7,7 @@ const { getLogger } = require('../logger.js');
 
 module.exports = class ExportServer {
     constructor(config) {
-        const { tabs, chromiumArgs, chromiumExecutablePath, logger, testing, quick } = config;
+        const { tabs, chromiumArgs, chromiumExecutablePath, logger, testing, quick, timeout } = config;
 
         this.taskQueue = new Queue({
             maxWorkers : config['max-workers'],
@@ -15,7 +15,8 @@ module.exports = class ExportServer {
             chromiumArgs,
             chromiumExecutablePath,
             quick,
-            testing
+            testing,
+            timeout
         });
 
         this.logger = getLogger(logger);
