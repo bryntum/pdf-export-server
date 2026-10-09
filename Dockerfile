@@ -20,6 +20,7 @@ RUN apt-get update \
     curl ca-certificates \
     # Fonts for international character support
     fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst-one fonts-freefont-ttf \
+    fonts-lato fonts-font-awesome \
     # Upgrade all packages to get security patches (fixes chromium and libpng CVEs)
     && apt-get upgrade -y \
     && rm -rf /var/lib/apt/lists/*

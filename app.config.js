@@ -35,7 +35,7 @@ const config = {
     "level"         : "info",
 
     // Pass true to wait for page load only (fonts may be missing). Reduces page loading time by at least .5s
-    "quick"          : false,
+    "quick"          : true,
 
     // Request timeout time in seconds (page.setContent and page.pdf use it too)
     "timeout"       : 120,

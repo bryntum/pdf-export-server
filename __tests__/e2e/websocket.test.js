@@ -114,7 +114,7 @@ describe('E2E WebSocket', () => {
             format      : 'A4',
             orientation : 'portrait',
             clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
-            html        : [{ html : htmlWithPort }]
+            html        : { html : htmlWithPort }
         };
 
         const doneMessage = {
@@ -154,7 +154,7 @@ describe('E2E WebSocket', () => {
             format      : 'A4',
             orientation : 'portrait',
             clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
-            html        : [{ html : htmlWithPort }]
+            html        : { html : htmlWithPort }
         };
 
         const doneMessage = {

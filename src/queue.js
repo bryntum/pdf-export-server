@@ -721,6 +721,9 @@ class Worker extends Loggable {
         }
 
         await page.setContent(html, { waitUntil : me.waitUntil, timeout : me.timeout });
+        // quick mode waits for `load` only; fonts can still be loading. Waiting for
+        // document.fonts.ready keeps text metrics identical to the client's.
+        await page.evaluate(() => document.fonts.ready);
         await page.emulateMediaType('print');
         return page.pdf({ ...config, timeout : me.timeout });
     }
@@ -758,6 +761,9 @@ class Worker extends Loggable {
         }
 
         await page.setContent(html, { waitUntil : me.waitUntil, timeout : me.timeout });
+        // quick mode waits for `load` only; fonts can still be loading. Waiting for
+        // document.fonts.ready keeps text metrics identical to the client's.
+        await page.evaluate(() => document.fonts.ready);
 
         const contentElement = await page.$('.b-export-content');
 
