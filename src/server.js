@@ -39,17 +39,8 @@ if (config.level && config.logger) {
     config.logger.level = config.level;
 }
 
-let chromiumArgs = [];
-
-if (config['no-sandbox']) {
-    chromiumArgs.push('--no-sandbox');
-}
-
-if (config['disable-web-security']) {
-    chromiumArgs.push('--disable-web-security');
-}
-
-config.chromiumArgs = chromiumArgs;
+const { buildChromiumArgs } = require('./config/chromium.js');
+config.chromiumArgs = buildChromiumArgs(config);
 config.chromiumExecutablePath = chromiumExecutablePath;
 
 if (config.help) {
