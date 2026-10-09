@@ -76,8 +76,15 @@ module.exports = class WebServer extends ExportServer {
         app.get('/status', me.handleStatus.bind(me));
         app.get('/ready', me.handleReady.bind(me));
         app.get('/metrics', async(req, res) => {
-            res.set('Content-Type', me.metrics.contentType);
-            res.end(await me.metrics.registry.metrics());
+            try {
+                const body = await me.metrics.registry.metrics();
+                res.set('Content-Type', me.metrics.contentType);
+                res.end(body);
+            }
+            catch (e) {
+                me.logger.log('warn', `metrics failed: ${e && e.stack || e}`);
+                res.status(500).end();
+            }
         });
 
         //Get the file, fileKey will be a guid. This serves the pdf
@@ -219,7 +226,10 @@ module.exports = class WebServer extends ExportServer {
             return;
         }
 
-        me.pendingRequests.add(req.id);
+        // Keyed by a per-request token: express-request-id reuses a client supplied X-Request-Id, so req.id can collide
+        const pendingToken = Symbol(req.id);
+        const state = { recorded : false, deferRelease : false };
+        me.pendingRequests.add(pendingToken);
         me.logger.log('info', `POST request ${req.id}`);
         me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
 
@@ -232,9 +242,12 @@ module.exports = class WebServer extends ExportServer {
                 res.set('Content-Type', 'application/octet-stream');
                 res.status(200);
                 let bytes = 0;
+                // The request stays pending until the PDF is fully written, so drain does not exit mid-stream
+                state.deferRelease = true;
+                res.once('close', () => me.pendingRequests.delete(pendingToken));
                 fileStream.on('data', chunk => bytes += chunk.length);
                 fileStream.pipe(res);
-                me.finishRequest(req, request, { bytes : () => bytes, result : 'success', startedAt }, res);
+                me.finishRequest(req, request, { bytes : () => bytes, result : 'success', startedAt }, res, state);
             }
             else {
                 //Send the url for the cached file, will is cached for 10 seconds
@@ -242,19 +255,21 @@ module.exports = class WebServer extends ExportServer {
                     success : true,
                     url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, fileStream)
                 });
-                me.finishRequest(req, request, { bytes : null, result : 'success', startedAt });
+                me.finishRequest(req, request, { bytes : null, result : 'success', startedAt }, null, state);
             }
-        }, e => {
-            if (e instanceof RequestCancelError) {
+        }, rejection => {
+            const e = rejection instanceof Error ? rejection : new Error(String(rejection));
+
+            if (rejection instanceof RequestCancelError) {
                 // Shorthand call doesn't work here for some reason
                 me.logger.log('verbose', `POST request ${req.id} cancelled`);
-                me.finishRequest(req, request, { bytes : null, result : 'cancelled', startedAt });
+                me.finishRequest(req, request, { bytes : null, result : 'cancelled', startedAt }, null, state);
             }
             else {
                 // Shorthand call doesn't work here for some reason
                 me.logger.log('warn', `POST request ${req.id} failed`);
                 me.logger.log('warn', e.stack);
-                me.finishRequest(req, request, { bytes : null, result : 'failed', startedAt });
+                me.finishRequest(req, request, { bytes : null, result : 'failed', startedAt }, null, state);
 
                 //Make up min 500 or 200?
                 res.status(request.sendAsBinary ? 500 : 200).jsonp({
@@ -263,20 +278,39 @@ module.exports = class WebServer extends ExportServer {
                     stack   : e.stack
                 });
             }
-        }).catch(e => {
+        }).catch(rejection => {
+            const e = rejection instanceof Error ? rejection : new Error(String(rejection));
+
             // A failure while answering a successful export is not a second result: it is logged, never re-counted
             me.logger.log('warn', `POST request ${req.id} response failed: ${e.stack}`);
+
+            // Nothing is streaming reliably any more: release in .finally (a later 'close' delete is harmless)
+            state.deferRelease = false;
+
+            // ...unless nothing was recorded yet (e.g. the success handler threw before recording)
+            if (!state.recorded) {
+                me.finishRequest(req, request, { bytes : null, result : 'failed', startedAt }, null, state);
+            }
+
             if (!res.headersSent) {
                 res.status(500).jsonp({ success : false, msg : e.message });
             }
-        }).finally(() => me.pendingRequests.delete(req.id));
+        }).finally(() => {
+            if (!state.deferRelease) {
+                me.pendingRequests.delete(pendingToken);
+            }
+        });
     }
 
     /**
      * Records metrics and the structured request log line. When `res` is given (binary streaming) the record is made
      * once the response has been fully written, so duration and bytes are final.
      */
-    finishRequest(req, request, { bytes, result, startedAt }, res) {
+    finishRequest(req, request, { bytes, result, startedAt }, res, state) {
+        if (state) {
+            state.recorded = true;
+        }
+
         const record = () => {
             try {
                 this.metrics.observe({ result, durationSeconds : (Date.now() - startedAt) / 1000 });
