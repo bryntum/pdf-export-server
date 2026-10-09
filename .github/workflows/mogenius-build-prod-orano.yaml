@@ -4,9 +4,7 @@ description: Build and release a Docker image for AMD64 architecture without sem
   release:
     types:
       - created
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 env:
   VERSION: 0.0.1
   MO_DOCKERFILE: Dockerfile
@@ -33,7 +31,8 @@ jobs:
           node-version: 20
       - name: get semversion
         run: |
-          VERSION=$(git describe --tags $(git rev-list --tags --max-count=1))
+          VERSION=$(git describe --tags "$(git rev-list --tags --max-count=1 2>/dev/null)" 2>/dev/null || true)
+          if [ -z "$VERSION" ]; then VERSION=$(git rev-parse --short HEAD); fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Get last commit hash
         id: lastHash
