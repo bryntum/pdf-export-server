@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 const Commands = require('./commands.js');
 const WebServer = require('./server/WebServer.js');
+const { applyEnv } = require('./config/env.js');
 let { config } = require('../app.config.js');
 
 //Do a check if this is a Pkg executable or is executed from nodejs commandline
@@ -23,6 +24,7 @@ if (options.verbose) {
 }
 
 config = Object.assign(options['no-config'] ? {} : config, options);
+applyEnv(config);
 
 if (config.http === config.https) {
     config.http = false;
