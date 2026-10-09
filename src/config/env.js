@@ -1,5 +1,6 @@
 // Maps PDF_EXPORT_* environment variables onto the app config. Numbers must be
-// positive integers; anything else keeps the config's existing value.
+// plain digit strings with a value above zero; anything else keeps the config's
+// existing value.
 const NUMERIC = {
     PDF_EXPORT_MAX_WORKERS : 'max-workers',
     PDF_EXPORT_TIMEOUT     : 'timeout',
@@ -15,7 +16,7 @@ const STRINGS = {
 
 function applyEnv(config, env = process.env) {
     for (const [name, key] of Object.entries(NUMERIC)) {
-        const value = Number.parseInt(env[name], 10);
+        const value = /^\d+$/.test(env[name] || '') ? Number(env[name]) : NaN;
         if (Number.isInteger(value) && value > 0) {
             config[key] = value;
         }

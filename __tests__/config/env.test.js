@@ -15,9 +15,20 @@ describe('applyEnv', () => {
         const config = applyEnv({ 'max-workers' : 5, timeout : 120, 'max-pages' : 500, 'max-queue' : 20 }, {
             PDF_EXPORT_MAX_WORKERS : '',
             PDF_EXPORT_TIMEOUT     : '0',
-            PDF_EXPORT_MAX_PAGES   : 'lots'
+            PDF_EXPORT_MAX_PAGES   : 'lots',
+            PDF_EXPORT_MAX_QUEUE   : '4abc'
         });
         expect(config).toMatchObject({ 'max-workers' : 5, timeout : 120, 'max-pages' : 500, 'max-queue' : 20 });
+    });
+
+    test('rejects non-decimal numeric strings such as 1e3', () => {
+        const config = applyEnv({ 'max-workers' : 5 }, { PDF_EXPORT_MAX_WORKERS : '1e3' });
+        expect(config['max-workers']).toBe(5);
+    });
+
+    test('mutates and returns the same object', () => {
+        const cfg = { 'max-workers' : 5 };
+        expect(applyEnv(cfg, {})).toBe(cfg);
     });
 
     test('copies string options verbatim', () => {

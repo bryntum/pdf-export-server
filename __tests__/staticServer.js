@@ -6,7 +6,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 
-const RESOURCES_PORT = 9999;
+const RESOURCES_PORT = Number(process.env.PDF_EXPORT_TEST_PORT) || 9999;
 const RESOURCES_DIR = path.join(__dirname, 'samples', 'resources');
 
 // MIME types for common file types
