@@ -19,7 +19,7 @@ module.exports = class ExportServer {
             timeout
         });
 
-        this.logger = getLogger(logger);
+        this.logger = getLogger({ ...logger, 'log-format' : config['log-format'] });
 
         this.taskQueue.on('log', ({ level, message, id, label }) => {
             // Skip logging deliberate testing exceptions

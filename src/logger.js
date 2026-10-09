@@ -19,7 +19,8 @@ module.exports = {
                 return `${timestamp} ${level}: ${message}`;
             });
 
-            const transports = [new winstonTransports.Console({ level : 'error' })];
+            const json = config?.['log-format'] === 'json';
+            const transports = [new winstonTransports.Console({ level : json ? 'info' : 'error' })];
 
             if (config?.rotate) {
                 transports.push(new winstonTransports.DailyRotateFile(config.rotate));
@@ -29,10 +30,9 @@ module.exports = {
             }
 
             loggers[hash] = result = createLogger({
-                format: combine(
-                    timestamp(),
-                    myFormat
-                ),
+                format: json
+                    ? combine(timestamp({ alias : 'ts' }), format.json())
+                    : combine(timestamp(), myFormat),
                 transports,
                 ...config
             });

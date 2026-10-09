@@ -14,6 +14,7 @@ const { RequestCancelError } = require('../exception.js');
 const { getId } = require('../utils/helpers.js');
 const { checkLimits } = require('./limits.js');
 const { warmUp } = require('./lifecycle.js');
+const { createMetrics } = require('./metrics.js');
 const packageInfo = require('../../package.json');
 
 const CLOSE_REASON = {
@@ -29,6 +30,7 @@ module.exports = class WebServer extends ExportServer {
         this.files = {};
         this.pendingRequests = new Set();
         this.config = config;
+        this.metrics = createMetrics({ queue : this.taskQueue, pendingRequests : this.pendingRequests });
 
         this.createServer(config);
     }
@@ -73,6 +75,10 @@ module.exports = class WebServer extends ExportServer {
 
         app.get('/status', me.handleStatus.bind(me));
         app.get('/ready', me.handleReady.bind(me));
+        app.get('/metrics', async(req, res) => {
+            res.set('Content-Type', me.metrics.contentType);
+            res.end(await me.metrics.registry.metrics());
+        });
 
         //Get the file, fileKey will be a guid. This serves the pdf
         app.get('/:fileKey/', me.handleFileKey.bind(me));
@@ -191,6 +197,7 @@ module.exports = class WebServer extends ExportServer {
     handleExportPOSTRequest(req, res) {
         const request = req.body;
         const me = this;
+        const startedAt = Date.now();
 
         //Accepts encoded and parsed html fragments. If still encoded, then parse
         if (typeof request.html === 'string') {
@@ -206,6 +213,7 @@ module.exports = class WebServer extends ExportServer {
 
         if (refusal) {
             me.logger.log('warn', `POST request ${req.id} refused: ${refusal.body.code}`);
+            me.metrics.observe({ result : 'refused', durationSeconds : 0 });
             res.set(refusal.headers || {});
             res.status(refusal.status).jsonp(refusal.body);
             return;
@@ -223,7 +231,10 @@ module.exports = class WebServer extends ExportServer {
             if (request.sendAsBinary) {
                 res.set('Content-Type', 'application/octet-stream');
                 res.status(200);
+                let bytes = 0;
+                fileStream.on('data', chunk => bytes += chunk.length);
                 fileStream.pipe(res);
+                me.finishRequest(req, request, { bytes : () => bytes, result : 'success', startedAt }, res);
             }
             else {
                 //Send the url for the cached file, will is cached for 10 seconds
@@ -231,16 +242,19 @@ module.exports = class WebServer extends ExportServer {
                     success : true,
                     url     : me.setFile(req.protocol + '://' + req.get('host') + req.originalUrl, request, fileStream)
                 });
+                me.finishRequest(req, request, { bytes : null, result : 'success', startedAt });
             }
         }).catch(e => {
             if (e instanceof RequestCancelError) {
                 // Shorthand call doesn't work here for some reason
                 me.logger.log('verbose', `POST request ${req.id} cancelled`);
+                me.finishRequest(req, request, { bytes : null, result : 'cancelled', startedAt });
             }
             else {
                 // Shorthand call doesn't work here for some reason
                 me.logger.log('warn', `POST request ${req.id} failed`);
                 me.logger.log('warn', e.stack);
+                me.finishRequest(req, request, { bytes : null, result : 'failed', startedAt });
 
                 //Make up min 500 or 200?
                 res.status(request.sendAsBinary ? 500 : 200).jsonp({
@@ -250,6 +264,44 @@ module.exports = class WebServer extends ExportServer {
                 });
             }
         }).finally(() => me.pendingRequests.delete(req.id));
+    }
+
+    /**
+     * Records metrics and the structured request log line. When `res` is given (binary streaming) the record is made
+     * once the response has been fully written, so duration and bytes are final.
+     */
+    finishRequest(req, request, { bytes, result, startedAt }, res) {
+        const record = () => {
+            this.metrics.observe({ result, durationSeconds : (Date.now() - startedAt) / 1000 });
+            this.logRequest(req, request, { bytes : typeof bytes === 'function' ? bytes() : bytes, result, startedAt });
+        };
+
+        if (res) {
+            res.once('close', record);
+        }
+        else {
+            record();
+        }
+    }
+
+    // Never logs export HTML or PDF content, only sizes and identifiers
+    logRequest(req, request, { bytes, result, startedAt }) {
+        const fields = {
+            requestId  : req.id,
+            tenant     : req.headers['x-tenant'] || null,
+            userHash   : req.headers['x-user-hash'] || null,
+            pages      : Array.isArray(request.html) ? request.html.length : 0,
+            bytes,
+            durationMs : Date.now() - startedAt,
+            result
+        };
+
+        if (this.config['log-format'] === 'json') {
+            this.logger.log('info', 'export request', fields);
+        }
+        else {
+            this.logger.log('info', JSON.stringify(fields));
+        }
     }
 
     handleExportWebSocketConnection(ws, req, timeout) {
