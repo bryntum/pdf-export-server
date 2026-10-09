@@ -60,7 +60,8 @@ else if (config.http || config.https) {
         webServer.ready = false;
         const result = await drain({
             pending : webServer.pendingRequests,
-            server  : webServer.httpServer || webServer.httpsServer,
+            servers   : [webServer.httpServer, webServer.httpsServer].filter(Boolean),
+            wsServers : [webServer.wsServer, webServer.wssServer].filter(Boolean),
             graceMs : 30000
         });
         webServer.taskQueue.stop();
