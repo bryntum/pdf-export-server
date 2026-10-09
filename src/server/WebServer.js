@@ -12,6 +12,7 @@ const { buffer } = require('node:stream/consumers');
 const ExportServer = require('./ExportServer.js');
 const { RequestCancelError } = require('../exception.js');
 const { getId } = require('../utils/helpers.js');
+const { checkLimits } = require('./limits.js');
 const packageInfo = require('../../package.json');
 
 const CLOSE_REASON = {
@@ -25,6 +26,8 @@ module.exports = class WebServer extends ExportServer {
         console.log(`[${packageInfo.name}@${packageInfo.version}] Starting server...`);
 
         this.files = {};
+        this.pendingRequests = new Set();
+        this.config = config;
 
         this.createServer(config);
     }
@@ -44,8 +47,8 @@ module.exports = class WebServer extends ExportServer {
         }, options);
 
         app.use(addRequestId());
-        app.use(bodyParser.json({ limit : options.maximum || '50mb' }));
-        app.use(bodyParser.urlencoded({ extended : false, limit : options.maximum || '50mb' }));
+        app.use(bodyParser.json({ limit : options.maximum || '100mb' }));
+        app.use(bodyParser.urlencoded({ extended : false, limit : options.maximum || '100mb' }));
 
         //Set CORS
         if (options.cors !== 'false') {
@@ -188,6 +191,21 @@ module.exports = class WebServer extends ExportServer {
             request.html = JSON.parse(request.html);
         }
 
+        const refusal = checkLimits({
+            pages    : Array.isArray(request.html) ? request.html.length : 0,
+            pending  : me.pendingRequests.size,
+            maxPages : me.config['max-pages'],
+            maxQueue : me.config['max-queue']
+        });
+
+        if (refusal) {
+            me.logger.log('warn', `POST request ${req.id} refused: ${refusal.body.code}`);
+            res.set(refusal.headers || {});
+            res.status(refusal.status).jsonp(refusal.body);
+            return;
+        }
+
+        me.pendingRequests.add(req.id);
         me.logger.log('info', `POST request ${req.id}`);
         me.logger.log('verbose', `POST request ${req.id} headers: ${JSON.stringify(req.headers)}`);
 
@@ -225,7 +243,7 @@ module.exports = class WebServer extends ExportServer {
                     stack   : e.stack
                 });
             }
-        });
+        }).finally(() => me.pendingRequests.delete(req.id));
     }
 
     handleExportWebSocketConnection(ws, req, timeout) {
