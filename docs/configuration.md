@@ -116,8 +116,8 @@ Prometheus series exposed by `GET /metrics`:
 | `pdf_export_page_jobs` | gauge | Page jobs waiting in the render queue |
 | `pdf_export_workers` | gauge | Chromium workers alive |
 
-Shutdown on `SIGTERM`: `/ready` turns `503` at once and the server stops accepting connections on every HTTP, HTTPS and
-WebSocket listener. In-flight HTTP exports get up to 30 seconds to finish. The process then exits with `0` if everything
+Shutdown on `SIGTERM` (or `SIGINT`): the listeners on every HTTP, HTTPS and WebSocket port close immediately, so probes
+get connection refused rather than a `503`. In-flight HTTP exports get up to 30 seconds to finish. The process then exits with `0` if everything
 drained, or with `1` if the grace period ran out (remaining connections are closed).
 
 Retries: a failed job is retried once, and only when Chromium itself crashed (errors such as `Target closed` or

@@ -94,6 +94,8 @@ services:
 On `SIGTERM` the server marks itself not ready, stops accepting connections and waits up to 30 seconds for in-flight
 exports. It exits with `0` when all exports finished and with `1` when the grace period ran out.
 
+On Kubernetes a `preStop` `sleep 5` plus the 30 second drain fits under `terminationGracePeriodSeconds: 45`, as the gitops manifests set it.
+
 The Dockerfile uses the exec form of `ENTRYPOINT`, so Node is PID 1 and receives the signal directly. Docker's default stop
 timeout is 10 seconds, which is shorter than the drain period. Keep `stop_grace_period` (or `docker stop --time`) at 35
 seconds or more, otherwise Docker sends `SIGKILL` during the drain.
