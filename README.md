@@ -98,6 +98,12 @@ needing a Node.js environment.
    ./dist/pdf-export-server*
    ```
 
+## OFFOLIO fork
+
+This is the OFFOLIO fork of Bryntum's export server. It adds environment-variable configuration, request limits
+(`413 TOO_MANY_PAGES`, `503 QUEUE_FULL`), `/ready` and `/metrics` endpoints, JSON request logs, and a graceful `SIGTERM`
+drain. See [OFFOLIO additions](docs/configuration.md#offolio-additions) and the [Docker guide](docs/docker.md) for details.
+
 ## Links
 - [Architecture](docs/architecture.md)
 - [Server protocol](docs/protocol.md)
