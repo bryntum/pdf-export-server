@@ -56,7 +56,7 @@ else if (config.http || config.https) {
     });
 
     const { drain } = require('./server/lifecycle.js');
-    process.once('SIGTERM', async () => {
+    const shutdown = async() => {
         webServer.ready = false;
         const result = await drain({
             pending : webServer.pendingRequests,
@@ -66,7 +66,9 @@ else if (config.http || config.https) {
         });
         webServer.taskQueue.stop();
         process.exit(result === 'drained' ? 0 : 1);
-    });
+    };
+    process.once('SIGTERM', shutdown);
+    process.once('SIGINT', shutdown);
 }
 else {
     commands.showHelp();

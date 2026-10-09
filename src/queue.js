@@ -208,7 +208,11 @@ class Queue extends Loggable {
         me.startPuppeteer = async function(scope) {
             const browser = await puppeteer.launch({
                 executablePath : await chromiumExecutablePath,
-                args           : chromiumArgs
+                args           : chromiumArgs,
+                // src/server.js owns shutdown: puppeteer must not kill Chromium under in-flight renders
+                handleSIGTERM  : false,
+                handleSIGHUP   : false,
+                handleSIGINT   : false
             });
 
             scope.verbose('Browser started');
@@ -723,9 +727,23 @@ class Worker extends Loggable {
         await page.setContent(html, { waitUntil : me.waitUntil, timeout : me.timeout });
         // quick mode waits for `load` only; fonts can still be loading. Waiting for
         // document.fonts.ready keeps text metrics identical to the client's.
-        await page.evaluate(() => document.fonts.ready);
+        await me.waitForFonts(page);
         await page.emulateMediaType('print');
         return page.pdf({ ...config, timeout : me.timeout });
+    }
+
+    /**
+     * Waits for web fonts, bounded by the export timeout. Missing fonts beat a failed export, so a timeout only warns.
+     */
+    async waitForFonts(page) {
+        const me = this;
+
+        try {
+            await page.waitForFunction(() => document.fonts.status === 'loaded', { timeout : me.timeout });
+        }
+        catch (e) {
+            me.warn(`Fonts not loaded in time, continuing: ${e.message}`);
+        }
     }
 
     /**
@@ -763,7 +781,7 @@ class Worker extends Loggable {
         await page.setContent(html, { waitUntil : me.waitUntil, timeout : me.timeout });
         // quick mode waits for `load` only; fonts can still be loading. Waiting for
         // document.fonts.ready keeps text metrics identical to the client's.
-        await page.evaluate(() => document.fonts.ready);
+        await me.waitForFonts(page);
 
         const contentElement = await page.$('.b-export-content');
 
