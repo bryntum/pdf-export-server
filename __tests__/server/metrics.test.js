@@ -26,3 +26,11 @@ test('observe counts the result and records the duration', async () => {
     expect(text).toMatch(/pdf_export_page_jobs 3/);
     expect(text).toMatch(/pdf_export_workers 1/);
 });
+
+test('refused only increments the counter, not the duration histogram', async () => {
+    const metrics = createMetrics({ queue : { jobs : [], workers : new Set() }, pendingRequests : new Set() });
+    metrics.refused();
+    const text = await metrics.registry.metrics();
+    expect(text).toMatch(/pdf_export_requests_total\{result="refused"\} 1/);
+    expect(text).toMatch(/pdf_export_duration_seconds_count 0/);
+});

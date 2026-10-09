@@ -46,7 +46,10 @@ module.exports = {
             const clog = console.log;
             console.log = function(...args) {
                 result.info(...args);
-                clog.apply(console, args);
+                // JSON mode keeps stdout pure: the console transport already prints the line
+                if (!json) {
+                    clog.apply(console, args);
+                }
             };
         }
 

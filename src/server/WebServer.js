@@ -213,7 +213,7 @@ module.exports = class WebServer extends ExportServer {
 
         if (refusal) {
             me.logger.log('warn', `POST request ${req.id} refused: ${refusal.body.code}`);
-            me.metrics.observe({ result : 'refused', durationSeconds : 0 });
+            me.metrics.refused();
             res.set(refusal.headers || {});
             res.status(refusal.status).jsonp(refusal.body);
             return;
@@ -244,7 +244,7 @@ module.exports = class WebServer extends ExportServer {
                 });
                 me.finishRequest(req, request, { bytes : null, result : 'success', startedAt });
             }
-        }).catch(e => {
+        }, e => {
             if (e instanceof RequestCancelError) {
                 // Shorthand call doesn't work here for some reason
                 me.logger.log('verbose', `POST request ${req.id} cancelled`);
@@ -263,6 +263,12 @@ module.exports = class WebServer extends ExportServer {
                     stack   : e.stack
                 });
             }
+        }).catch(e => {
+            // A failure while answering a successful export is not a second result: it is logged, never re-counted
+            me.logger.log('warn', `POST request ${req.id} response failed: ${e.stack}`);
+            if (!res.headersSent) {
+                res.status(500).jsonp({ success : false, msg : e.message });
+            }
         }).finally(() => me.pendingRequests.delete(req.id));
     }
 
@@ -272,8 +278,13 @@ module.exports = class WebServer extends ExportServer {
      */
     finishRequest(req, request, { bytes, result, startedAt }, res) {
         const record = () => {
-            this.metrics.observe({ result, durationSeconds : (Date.now() - startedAt) / 1000 });
-            this.logRequest(req, request, { bytes : typeof bytes === 'function' ? bytes() : bytes, result, startedAt });
+            try {
+                this.metrics.observe({ result, durationSeconds : (Date.now() - startedAt) / 1000 });
+                this.logRequest(req, request, { bytes : typeof bytes === 'function' ? bytes() : bytes, result, startedAt });
+            }
+            catch (e) {
+                // Observability must never alter the response
+            }
         };
 
         if (res) {

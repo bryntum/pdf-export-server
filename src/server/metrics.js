@@ -41,6 +41,10 @@ function createMetrics({ queue, pendingRequests }) {
     return {
         registry,
         contentType : registry.contentType,
+        // Refusals only count: a 0 s sample would skew latency percentiles during overload
+        refused() {
+            requests.inc({ result : 'refused' });
+        },
         observe({ result, durationSeconds }) {
             requests.inc({ result });
             duration.observe(durationSeconds);
