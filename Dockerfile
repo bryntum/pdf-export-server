@@ -25,8 +25,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade npm to get latest secure version
-RUN npm install -g npm@11.21.1 \
-    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz -o /tmp/brace-expansion.tgz \
+RUN npm install -g npm@11.21.2 \
+    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.13.tgz -o /tmp/brace-expansion.tgz \
     && curl -sL https://registry.npmjs.org/ip-address/-/ip-address-10.7.5.tgz -o /tmp/ip-address.tgz \
     && curl -sL https://registry.npmjs.org/tar/-/tar-7.5.22.tgz -o /tmp/tar.tgz \
     && curl -sL https://registry.npmjs.org/undici/-/undici-6.29.1.tgz -o /tmp/undici.tgz \
