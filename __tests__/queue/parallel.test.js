@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { createExportServer, stopExportServer, streamToBuffer, getLoggerConfig, getTmpFilePath, loadTestHTML, RESOURCES_PORT } = require('../utils.js');
+const { createExportServer, stopExportServer, streamToBuffer, getLoggerConfig, getTmpFilePath, loadTestHTML } = require('../utils.js');
 const { waitForWithTimeout } = require('../assertions.js');
 
 // We export many pages, takes time
@@ -9,9 +9,6 @@ jest.setTimeout(5 * 60 * 1000);
 const parallelSamplesDir = path.join(__dirname, '../samples/parallel');
 const smokeSamplesDir = path.join(__dirname, '../samples/smoke');
 const baselineParallelPDF = path.join(parallelSamplesDir, 'base.pdf');
-
-// URL to navigate before setting content - establishes same-origin context for loading resources
-const clientURL = `http://localhost:${RESOURCES_PORT}/resources/build/grid.css`;
 
 // Allow 5% size difference from baseline
 const SIZE_THRESHOLD = 0.05;
@@ -66,8 +63,7 @@ describe('Queue Parallel Export', () => {
             orientation : 'portrait',
             format      : 'A4',
             fileFormat  : 'pdf',
-            html        : htmlChunks,
-            clientURL
+            html        : htmlChunks
         };
 
         const result = await exportServer.exportRequestHandler(requestData, 'test-parallel-1');
@@ -92,8 +88,7 @@ describe('Queue Parallel Export', () => {
             orientation : 'portrait',
             format      : 'A4',
             fileFormat  : 'pdf',
-            html        : [{ html : testPageHTML }],
-            clientURL
+            html        : [{ html : testPageHTML }]
         };
 
         // Send multiple requests concurrently
@@ -132,8 +127,7 @@ describe('Queue Parallel Export', () => {
             orientation : 'portrait',
             format      : 'A4',
             fileFormat  : 'pdf',
-            html        : [{ html : testPageHTML }],
-            clientURL
+            html        : [{ html : testPageHTML }]
         };
 
         const old = exportServer.taskQueue.runJob.bind(exportServer.taskQueue);

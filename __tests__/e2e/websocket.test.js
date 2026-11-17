@@ -113,7 +113,6 @@ describe('E2E WebSocket', () => {
             fileName    : 'test',
             format      : 'A4',
             orientation : 'portrait',
-            clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
             html        : { html : htmlWithPort }
         };
 
@@ -154,7 +153,6 @@ describe('E2E WebSocket', () => {
             fileName    : 'test',
             format      : 'A4',
             orientation : 'portrait',
-            clientURL   : `http://localhost:${server.httpPort}/resources/build/grid.css`,
             html        : { html : htmlWithPort }
         };
 

@@ -31,6 +31,10 @@ const config = {
     // Maximum amount of parallel puppeteer instances to run
     "max-workers"   : 5,
 
+    // Port of the local address (http://127.0.0.1:port) which is used to pass exported pages to the browser.
+    // By default a random free port is used
+    "page-port"     : null,
+
     // Log level. Possible values: error, warn, info, verbose
     "level"         : "info",
 

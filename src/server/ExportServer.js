@@ -11,6 +11,7 @@ module.exports = class ExportServer {
 
         this.taskQueue = new Queue({
             maxWorkers : config['max-workers'],
+            pagePort   : config['page-port'],
             useTabs    : Boolean(tabs),
             chromiumArgs,
             chromiumExecutablePath,
@@ -109,16 +110,17 @@ module.exports = class ExportServer {
      */
     async exportRequestHandler(requestData, requestId, emitter) {
         const
-            { html, orientation, format, fileFormat, clientURL } = requestData,
-            landscape                                            = orientation === 'landscape';
+            { html, orientation, format, fileFormat } = requestData,
+            landscape                                 = orientation === 'landscape';
 
         if (!html) {
             throw new Error('No html fragments found');
         }
         else {
             const
+                // Only known fields are picked from the request. `clientURL` sent by older clients is ignored,
+                // server never navigates to a URL provided by the client
                 config = {
-                    clientURL,
                     fileFormat
                 },
                 dimension = format.split('*');
