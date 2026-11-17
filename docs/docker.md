@@ -35,7 +35,8 @@ Using the Docker image has certain constraints. By default, server doesn't have 
 is a separate machine with own network, so:
 
 1. URL of the exported page has to be accessible from the Docker container.
-2. Docker container has to be allowed to load resources, by setting CORS headers on the web server
+2. Docker container has to be allowed to load resources. Either by setting CORS headers or by providing additional
+ config
 
 See [architecture guide](architecture.md) for more info.
 
@@ -46,8 +47,10 @@ new Grid({
             // Assuming Docker is running locally
             exportServer            : 'http://localhost:8080/',
             // Docker has to access external/global address of the exported page
-            // Web server has to provide `Access-Control-Allow-Origin: *` header for the resources
-            translateURLsToAbsolute : 'http://external-address:80/'
+            translateURLsToAbsolute : 'http://external-address:80/',
+            // This is required only if you do not choose to enable CORS on web server.
+            // In case your web server provides `Access-Control-Allow-Origin: *` header, this can be omitted.
+            clientURL               : 'http://external-address:80/'
         }
     }
 })

@@ -14,13 +14,10 @@ in the log file:
 
 ```
 2022-05-13T14:58:47.745Z error: [Worker@3qj8yt1k45egung7cd13n] Page 3/50 reports: Access to font at 
-'http://localhost/grid/resources/fonts/Lato-Regular.woff2' from origin 'http://127.0.0.1:53124' has been blocked by
-CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
-location: http://127.0.0.1:53124/8a6e0f6c-0d1b-4c64-9d56-0c2e3f6a1b7e
+'http://localhost/grid/resources/fonts/Lato-Regular.woff2' from origin 'null' has been blocked by CORS policy: No 
+'Access-Control-Allow-Origin' header is present on the requested resource.
+location: about:blank
 ```
-
-Origin in this message is a local address which export server uses to give HTML to the headless browser, see
-[architecture](architecture.md) guide for details.
 
 ### Inspect outgoing request
 

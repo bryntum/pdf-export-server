@@ -1,9 +1,12 @@
 const path = require('path');
-const { createExportServer, stopExportServer, streamToBuffer, getLoggerConfig, loadTestHTML } = require('../utils.js');
+const { createExportServer, stopExportServer, streamToBuffer, getLoggerConfig, loadTestHTML, RESOURCES_PORT } = require('../utils.js');
 
 jest.setTimeout(5 * 60 * 1000);
 
 const testPageHTML = loadTestHTML(path.join(__dirname, '../samples/smoke/base.html'));
+
+// URL to navigate before setting content - establishes same-origin context for loading resources
+const clientURL = `http://localhost:${RESOURCES_PORT}/resources/build/grid.css`;
 
 let exportServer;
 
@@ -26,7 +29,8 @@ describe('Queue with Randomly Failing Workers', () => {
             html        : [{ html : testPageHTML }],
             orientation : 'portrait',
             format      : '1120*2389',
-            fileFormat  : 'png'
+            fileFormat  : 'png',
+            clientURL
         };
 
         // With testing mode, workers randomly fail but should eventually succeed through retries
@@ -69,7 +73,8 @@ describe('Queue with Randomly Failing Workers', () => {
             ],
             orientation : 'portrait',
             format      : 'A4',
-            fileFormat  : 'pdf'
+            fileFormat  : 'pdf',
+            clientURL
         };
 
         // Some may fail after max retries

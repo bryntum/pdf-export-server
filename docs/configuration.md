@@ -13,7 +13,6 @@ Usage: ./server [OPTION]
   -m, --maximum=SIZE        Maximum upload size (default 50mb)
   -r, --resources=PATH      The absolute path to the resource directory. This path will be accessible via the webserver
       --max-workers=WORKERS Maximum amount of workers (puppeteer instances) (default: 5)
-      --page-port=PORT      Local port used to pass exported pages to the browser. Random free port by default
       --level=LEVEL         Specify log level (error, warn, verbose). Default "error"
       --timeout=TIMEOUT     Request timeout time in seconds
       --quick               Provide to only wait for page load event
@@ -37,23 +36,6 @@ To speed up the export we parallelize it using puppeteer instances (workers). It
 easier to restart the export if browser or tab fails. By default, there are 5 workers which feel fine on machines with
 as much as 1 GB RAM. In general, it takes about 2-3 seconds to generate one PDF page, depending on network speed and
 overall system performance. Workers amount is not limited.
-
-##### Page port
-
-Server does not put received HTML to the headless browser directly. It keeps HTML in memory and navigates the browser
-to a local address, like `http://127.0.0.1:53124/8a6e0f6c-0d1b-4c64-9d56-0c2e3f6a1b7e`, which only returns that HTML
-while the page is being exported. This address is only accessible from the machine (or the Docker container) the
-server runs on.
-
-By default, a random free port is used every time server starts. Use `page-port` config to set a specific one:
-
-```shell
-pdf-export-server$ node ./src/server.js -h 8080 --page-port 8090
-```
-
-This makes origin of the exported page constant (`http://127.0.0.1:8090`), so a web server hosting styles and fonts
-can allow it with `Access-Control-Allow-Origin: http://127.0.0.1:8090` header instead of allowing every origin. The
-port has to be free and different from the HTTP and HTTPS ports of the server, otherwise export requests fail.
 
 ##### Resources
 <a name="CORS"></a>

@@ -12,7 +12,6 @@ module.exports = class Commands {
             { name: 'maximum', alias: 'm', type: String, description: 'Maximum upload size (default 50mb)' },
             { name: 'resources', alias: 'r', type: String, description: 'The absolute path to the resource directory. This path will be accessible via the webserver' },
             { name: 'max-workers', type: Number, defaultValue: 5, description: 'Maximum amount of workers (puppeteer instances)' },
-            { name: 'page-port', type: Number, description: 'Local port used to pass exported pages to the browser. Random free port by default' },
             { name: 'level', type: String, description: 'Specify log level (error, warn, verbose). Default "error"' },
             { name: 'timeout', type: Number, description: 'Request timeout time in seconds' },
             { name: 'quick', type: Boolean, description: 'Provide to only wait for page load event' },

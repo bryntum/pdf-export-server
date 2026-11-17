@@ -2,7 +2,6 @@ const { EventEmitter } = require('events');
 const puppeteer = require('puppeteer');
 const { RequestCancelError } = require('./exception.js');
 const { getId } = require('./utils/helpers.js');
-const { PageHost } = require('./PageHost.js');
 
 const
     // Also defined in commands.js
@@ -117,7 +116,7 @@ class Loggable extends EventEmitter {
 }
 
 class Queue extends Loggable {
-    constructor({ maxWorkers = MAX_WORKERS, useTabs = false, chromiumExecutablePath, chromiumArgs = [], quick = false, testing = false, pagePort }) {
+    constructor({ maxWorkers = MAX_WORKERS, useTabs = false, chromiumExecutablePath, chromiumArgs = [], quick = false, testing = false }) {
         super();
         const me = this;
 
@@ -144,9 +143,6 @@ class Queue extends Loggable {
          * @type {Boolean}
          */
         me.testing = testing;
-
-        // Serves html of the exported pages to the browser
-        me.pageHost = new PageHost({ port : pagePort });
 
         // List of html chunks to convert to pdf/png
         me.jobs = [];
@@ -226,7 +222,6 @@ class Queue extends Loggable {
                 browser        : me._browser,
                 quick          : me.quick,
                 testing        : me.testing,
-                pageHost       : me.pageHost,
                 browserFactory : me.startPuppeteer
             });
 
@@ -363,8 +358,6 @@ class Queue extends Loggable {
             me._browser.close();
             delete me._browser;
         }
-
-        me.pageHost.stop();
 
         me._running = false;
     }
@@ -512,10 +505,9 @@ class Worker extends Loggable {
     constructor(config) {
         super(config);
 
-        const { browser, browserFactory, testing, quick, pageHost } = config;
+        const { browser, browserFactory, testing, quick } = config;
 
         this.browser = browser;
-        this.pageHost = pageHost;
         this.browserFactory = browserFactory;
         this.testing = testing;
 
@@ -674,26 +666,6 @@ class Worker extends Loggable {
     }
 
     /**
-     * Loads html to the page. Html is served from a local URL which browser is navigated to, this gives page an
-     * origin. Client cannot affect the URL in any way.
-     * @param page
-     * @param {String} html
-     * @returns {Promise<void>}
-     */
-    async loadHtml(page, html) {
-        const
-            me  = this,
-            url = await me.pageHost.add(html);
-
-        try {
-            await page.goto(url, { waitUntil : me.waitUntil });
-        }
-        finally {
-            me.pageHost.remove(url);
-        }
-    }
-
-    /**
      * Creates a single PDF buffer for a passed html fragment
      * @param page
      * @param html
@@ -711,7 +683,23 @@ class Worker extends Loggable {
             right  : 1
         };
 
-        await me.loadHtml(page, html);
+        // NOTE: NOT SUPPORTED IN WSL
+        if (config.clientURL) {
+            // Navigate page to get rid of possible CORS
+            try {
+                await page.goto(config.clientURL, { waitUntil : 'load', referer : 'bryntum_pdf_export_server' });
+            }
+            catch (e) {
+                // Log warning, try to continue export
+                me.warn(`Unable to open client url ${config.clientURL}.\nError: ${e.message}`);
+            }
+        }
+        else {
+            // This navigation helps to set content much faster
+            await page.goto('about:blank');
+        }
+
+        await page.setContent(html, { waitUntil : me.waitUntil });
         await page.emulateMediaType('print');
         return page.pdf(config);
     }
@@ -732,7 +720,23 @@ class Worker extends Loggable {
             deviceScaleFactor : 4
         }, config);
 
-        await me.loadHtml(page, html);
+        // NOTE: NOT SUPPORTED IN WSL
+        if (config.clientURL) {
+            // Navigate page to get rid of possible CORS
+            try {
+                await page.goto(config.clientURL, { waitUntil : 'load', referer : 'bryntum_pdf_export_server' });
+            }
+            catch (e) {
+                // Log warning, try to continue export
+                me.warn(`Unable to open client url ${config.clientURL}.\nError: ${e.message}`);
+            }
+        }
+        else {
+            // This navigation helps to set content much faster
+            await page.goto('about:blank');
+        }
+
+        await page.setContent(html, { waitUntil : me.waitUntil });
 
         const contentElement = await page.$('.b-export-content');
 

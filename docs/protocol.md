@@ -19,6 +19,10 @@ Request JSON payload is expected to have the following structure:
     // Page orientation, "portrait" or "landscape"
     orientation: "portrait",
     
+    // Url to navigate before loading HTML. Required for secured pages. Leave empty if you use local resources
+    // or your server doesn't use CSP/CORS policies
+    clientURL: "",
+    
     // If false server will return JSON response with a link to a file which will be available for a short
     // period of time to be downloaded.
     // If true server will return response with `Content-Type: application/octet-stream` and actual PDF/PNG
