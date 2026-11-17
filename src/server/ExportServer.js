@@ -1,4 +1,4 @@
-const muhammara = require('muhammara');
+const muhammara = require('@muhammara/native');
 const stream = require('stream');
 const memoryStreams = require('memory-streams');
 const { joinImages } = require('join-images');
@@ -36,8 +36,8 @@ module.exports = class ExportServer {
     }
 
     /**
-     * Concatenate an array of PDF buffers and return the combined result. This function uses the muhammara package, a
-     * copy the muhammara binary is delivered next to the executable.
+     * Concatenate an array of PDF buffers and return the combined result. This function uses the @muhammara/native
+     * package, a copy the muhammara binary is delivered next to the executable.
      *
      * @param {Uint8Array[]} pdfs
      * @returns {Promise<module:stream.internal.PassThrough>}
