@@ -25,17 +25,36 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade npm to get latest secure version
-RUN npm install -g npm@11.21.1 \
-    && curl -sL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.12.tgz -o /tmp/brace-expansion.tgz \
-    && curl -sL https://registry.npmjs.org/ip-address/-/ip-address-10.7.5.tgz -o /tmp/ip-address.tgz \
-    && curl -sL https://registry.npmjs.org/tar/-/tar-7.5.22.tgz -o /tmp/tar.tgz \
-    && curl -sL https://registry.npmjs.org/undici/-/undici-6.29.1.tgz -o /tmp/undici.tgz \
+# No npm release depends on glob 14 / minimatch 11 yet (npm 12 still wants glob ^13, minimatch ^10), so
+# they are swapped in manually. Both are ESM-only and npm loads them with require(), which needs
+# Node >= 22.12 - fine for this image. They need extra packages npm does not bundle:
+#  - glob 14 needs path-scurry 3
+#  - minimatch 11 needs @isaacs/nonrecursive-glob-match
+# Side effect: `npm ls -g --all` reports glob and minimatch as "invalid"
+# @sigstore/verify, @sigstore/bundle and @sigstore/protobuf-specs are in-range patch updates for npm 12
+RUN npm install -g npm@12.2.2 \
+    && curl -sfL https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.13.tgz -o /tmp/brace-expansion.tgz \
+    && curl -sfL https://registry.npmjs.org/glob/-/glob-14.0.2.tgz -o /tmp/glob.tgz \
+    && curl -sfL https://registry.npmjs.org/path-scurry/-/path-scurry-3.0.0.tgz -o /tmp/path-scurry.tgz \
+    && curl -sfL https://registry.npmjs.org/minimatch/-/minimatch-11.0.1.tgz -o /tmp/minimatch.tgz \
+    && curl -sfL https://registry.npmjs.org/@isaacs/nonrecursive-glob-match/-/nonrecursive-glob-match-1.1.0.tgz -o /tmp/nonrecursive-glob-match.tgz \
+    && curl -sfL https://registry.npmjs.org/@sigstore/verify/-/verify-4.1.3.tgz -o /tmp/sigstore-verify.tgz \
+    && curl -sfL https://registry.npmjs.org/@sigstore/bundle/-/bundle-5.0.1.tgz -o /tmp/sigstore-bundle.tgz \
+    && curl -sfL https://registry.npmjs.org/@sigstore/protobuf-specs/-/protobuf-specs-0.5.2.tgz -o /tmp/sigstore-protobuf-specs.tgz \
     && cd /usr/local/lib/node_modules/npm/node_modules \
     && rm -rf brace-expansion && tar -xzf /tmp/brace-expansion.tgz && mv package brace-expansion \
-    && rm -rf ip-address && tar -xzf /tmp/ip-address.tgz && mv package ip-address \
-    && rm -rf tar && tar -xzf /tmp/tar.tgz && mv package tar \
-    && rm -rf undici && tar -xzf /tmp/undici.tgz && mv package undici \
-    && rm /tmp/tar.tgz /tmp/brace-expansion.tgz /tmp/ip-address.tgz /tmp/undici.tgz
+    && rm -rf glob && tar -xzf /tmp/glob.tgz && mv package glob \
+    && rm -rf path-scurry && tar -xzf /tmp/path-scurry.tgz && mv package path-scurry \
+    && rm -rf minimatch && tar -xzf /tmp/minimatch.tgz && mv package minimatch \
+    && rm -rf @isaacs/nonrecursive-glob-match && mkdir -p @isaacs \
+    && tar -xzf /tmp/nonrecursive-glob-match.tgz && mv package @isaacs/nonrecursive-glob-match \
+    && rm -rf @sigstore/verify && tar -xzf /tmp/sigstore-verify.tgz && mv package @sigstore/verify \
+    && rm -rf @sigstore/bundle && tar -xzf /tmp/sigstore-bundle.tgz && mv package @sigstore/bundle \
+    && rm -rf @sigstore/protobuf-specs && tar -xzf /tmp/sigstore-protobuf-specs.tgz && mv package @sigstore/protobuf-specs \
+    && rm /tmp/*.tgz \
+    # Smoke test: fail the build if patched npm cannot load the swapped packages
+    && node -e "process.chdir('/usr/local/lib/node_modules/npm'); for (const p of ['glob', 'minimatch', '@sigstore/verify', 'sigstore']) require(require.resolve(p, { paths: [process.cwd()] }))" \
+    && npm --version
 
 # Add user so we don't need --no-sandbox
 RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
@@ -54,16 +73,10 @@ COPY --chown=pptruser:pptruser ["package.json", "/home/pptruser/"]
 
 WORKDIR /home/pptruser
 
-# MuhammaraJS installs fixed dependency to tar which fails security audit. Can be simplified to `npm i` after
-# this issue is fixed: https://github.com/julianhille/MuhammaraJS/issues/500
-# Combined install step: install, patch muhammara's dependencies, reinstall to update lock file
-# All in one RUN to avoid intermediate layers with vulnerable packages being detected by Docker Scout
+# npm 12 blocks install scripts of dependencies by default. @muhammara/native downloads its prebuilt binary
+# in an install script, it is allowed by `allowScripts` in package.json
 # Clear npm cache at end to prevent stale version info in Docker Scout SBOM
 RUN npm i \
-    && cd node_modules/muhammara && rm -rf node_modules package-lock.json \
-    && node -e "const p=require('./package.json'); p.overrides={tar:'7.5.22',minimatch:'10.2.3',picomatch:'4.0.4'}; require('fs').writeFileSync('./package.json',JSON.stringify(p,null,2));" \
-    && npm i \
-    && cd /home/pptruser && npm i \
     && npm cache clean --force \
     && rm -rf /home/pptruser/.npm/_logs
 

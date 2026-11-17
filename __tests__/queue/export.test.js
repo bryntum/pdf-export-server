@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { createExportServer, stopExportServer, streamToBuffer, getLoggerConfig, getTmpFilePath, loadTestHTML, RESOURCES_PORT } = require('../utils.js');
+const { createExportServer, stopExportServer, streamToBuffer, getLoggerConfig, getTmpFilePath, loadTestHTML } = require('../utils.js');
 
 jest.setTimeout(60 * 1000);
 
@@ -8,9 +8,6 @@ const samplesDir = path.join(__dirname, '../samples/smoke');
 const testPageHTML = loadTestHTML(path.join(samplesDir, 'base.html'));
 const baselinePDF = path.join(samplesDir, 'base_https.pdf');
 const baselinePNG = path.join(samplesDir, 'base_https.png');
-
-// URL to navigate before setting content - establishes same-origin context for loading resources
-const clientURL = `http://localhost:${RESOURCES_PORT}/resources/build/grid.css`;
 
 // Allow 5% size difference from baseline
 const SIZE_THRESHOLD = 0.05;
@@ -58,8 +55,7 @@ describe('Queue Export - PDF', () => {
             html        : [{ html : testPageHTML }],
             orientation : 'portrait',
             format      : '1120*2389',
-            fileFormat  : 'pdf',
-            clientURL
+            fileFormat  : 'pdf'
         };
 
         const result = await exportServer.exportRequestHandler(requestData, 'test-pdf-1');
@@ -86,8 +82,7 @@ describe('Queue Export - PDF', () => {
             ],
             orientation : 'portrait',
             format      : 'A4',
-            fileFormat  : 'pdf',
-            clientURL
+            fileFormat  : 'pdf'
         };
 
         const result = await exportServer.exportRequestHandler(requestData, 'test-pdf-multi');
@@ -113,8 +108,7 @@ describe('Queue Export - PNG', () => {
             html        : [{ html : testPageHTML }],
             orientation : 'portrait',
             format      : '1120*2389',
-            fileFormat  : 'png',
-            clientURL
+            fileFormat  : 'png'
         };
 
         const result = await exportServer.exportRequestHandler(requestData, 'test-png-1');
@@ -141,8 +135,7 @@ describe('Queue Export - PNG', () => {
             ],
             orientation : 'portrait',
             format      : 'A4',
-            fileFormat  : 'png',
-            clientURL
+            fileFormat  : 'png'
         };
 
         const result = await exportServer.exportRequestHandler(requestData, 'test-png-multi');

@@ -25,6 +25,7 @@ Supported Node versions:
 ```
 1.0.0+: Node >=8 <14
 2.0.0+: Node >= 20
+3.0.0+: Node >= 24
 ```
 
 1. Check out this repository

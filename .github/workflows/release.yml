@@ -6,7 +6,9 @@ name: Release
 #   2. run tests
 #   3. build & push Docker image (so a broken image never produces a git tag)
 #   4. commit, tag, push
-#   5. publish GitHub Release with auto-generated notes (.github/release.yml)
+#   5. publish GitHub Release. Notes are taken from releases/release.md (required for a major release), which is
+#      renamed to releases/<version>.md and replaced with an empty file. When it is empty, notes are
+#      auto-generated (.github/release.yml)
 on:
   workflow_dispatch:
     inputs:
@@ -51,10 +53,10 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Use Node.js 20.x
+      - name: Use Node.js 24.x
         uses: actions/setup-node@v6
         with:
-          node-version: 20.x
+          node-version: 24.x
           cache: 'npm'
 
       - run: npm ci
@@ -71,6 +73,31 @@ jobs:
           echo "current_version=${CURRENT_VERSION}" >> "$GITHUB_OUTPUT"
           echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
           echo "tag=v${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+
+      # Notes for the upcoming release are written manually to releases/release.md and are published as is.
+      # The file is renamed to releases/<version>.md and an empty one is left for the next release, both are
+      # committed with the version bump. Checked before the image is pushed, so a major release cannot be made
+      # without notes.
+      - name: Prepare release notes
+        id: notes
+        run: |
+          DRAFT="releases/release.md"
+          NOTES="releases/${{ steps.bump.outputs.new_version }}.md"
+          if [ -f "${DRAFT}" ] && grep -q '[^[:space:]]' "${DRAFT}"; then
+            if [ -e "${NOTES}" ]; then
+              echo "::error::${NOTES} already exists, cannot move ${DRAFT} there"
+              exit 1
+            fi
+            mv "${DRAFT}" "${NOTES}"
+            : > "${DRAFT}"
+            echo "Using release notes from ${DRAFT}, moved to ${NOTES}"
+            echo "path=${NOTES}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.bump }}" = "major" ]; then
+            echo "::error::Major release requires release notes, ${DRAFT} is empty"
+            exit 1
+          else
+            echo "${DRAFT} is empty, release notes will be generated"
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -101,7 +128,7 @@ jobs:
       - name: Commit, tag and push
         if: ${{ !inputs.dry-run }}
         run: |
-          git add package.json package-lock.json
+          git add package.json package-lock.json releases
           git commit -m "chore(release): ${{ steps.bump.outputs.tag }}"
           git tag -a "${{ steps.bump.outputs.tag }}" -m "${{ steps.bump.outputs.tag }}"
           git push origin HEAD
@@ -113,7 +140,9 @@ jobs:
         with:
           tag_name: ${{ steps.bump.outputs.tag }}
           name: ${{ steps.bump.outputs.tag }}
-          generate_release_notes: true
+          # Empty path means there are no written notes for this version
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.path == '' }}
           prerelease: ${{ inputs.prerelease }}
           draft: false
 
@@ -128,5 +157,6 @@ jobs:
             echo "- **Tag:** ${{ steps.bump.outputs.tag }}"
             echo "- **Pre-release:** ${{ inputs.prerelease }}"
             echo "- **Dry run:** ${{ inputs.dry-run }}"
+            echo "- **Release notes:** ${{ steps.notes.outputs.path || 'auto-generated' }}"
             echo "- **Docker image:** bryntum/pdf-export-server:${{ steps.bump.outputs.new_version }}"
           } >> "$GITHUB_STEP_SUMMARY"

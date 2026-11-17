@@ -6,8 +6,6 @@ const { getTmpFilePath, RESOURCES_PORT } = require('./utils.js');
 
 const testPageHTML = fs.readFileSync(path.join(__dirname, 'samples/smoke/base.html'), 'utf-8');
 const commonTestData = {
-    // Navigate to this URL to fix web security issues
-    clientURL    : 'http://localhost:{port}/resources/build/grid.css',
     orientation  : 'portrait',
     // This is calculated canvas size for the HTML being rendered
     format       : '1120*2389',

@@ -65,7 +65,9 @@ function startStaticServer() {
                 const ext = path.extname(filePath).toLowerCase();
                 const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-                res.writeHead(200, { 'Content-Type': contentType });
+                // Exported page has a different origin, so resources (fonts in the first place) have to be
+                // allowed to be loaded cross-origin. Same is required from a web server hosting real app.
+                res.writeHead(200, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
                 fs.createReadStream(filePath).pipe(res);
             });
         });
