@@ -36,7 +36,7 @@
     "build:macos": "node ./build.js --platform=macos"
   },
   "dependencies": {
-    "@muhammara/native": "~7.2.3",
+    "@muhammara/native": "~7.2.4",
     "@types/express": "~5.0.0",
     "body-parser": "~1.20.6",
     "command-line-args": "~6.0.1",

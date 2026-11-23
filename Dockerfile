@@ -1,6 +1,6 @@
 # Based on https://pptr.dev/troubleshooting#running-puppeteer-in-docker
 
-FROM node:24.22.2-trixie-slim
+FROM node:24.22.3-trixie-slim
 
 # Skip Puppeteer's Chrome download - use system Chromium instead
 # Required for arm64 Linux since Chrome for Testing lacks arm64 Linux builds
